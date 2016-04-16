@@ -6,6 +6,26 @@
 
 // SETCURRENTDIR("Media") // go to media files
 
+TYPE options_TYPE
+	
+	cameraMovementSpeed
+	cameraTurboSpeed
+
+ENDTYPE
+
+TYPE mapInfos_TYPE
+
+	sizeX
+	sizeY
+
+	offsetX
+	offsetY
+
+	markerX
+	markerY
+
+ENDTYPE
+
 TYPE system_mouseType
 	x
 	y
@@ -15,7 +35,7 @@ TYPE system_mouseType
 	b2_press
 ENDTYPE
 
-GLOBAL mouse AS system_mouseType
+GLOBAL mouse AS system_mouseType, mapInfos AS mapInfos_TYPE, options AS options_TYPE
 
 main()
 
@@ -23,8 +43,22 @@ main()
 FUNCTION main:
 
 	init()
+	LOADSPRITE "media/rect.png", 0
+	LOADSPRITE "media/border.png", 1
 
 	WHILE TRUE
+
+		system_mouse()
+		system_movement()
+
+		drawGround()
+		drawMarker()
+
+		drawMenu()
+		
+		//drawCircle(100, 100, 200)
+
+
 
 		SHOWSCREEN
 	WEND
@@ -35,6 +69,12 @@ FUNCTION init:
 
 	AUTOPAUSE FALSE
 	SYSTEMPOINTER TRUE
+	
+	mapInfos.sizeX = 28
+	mapInfos.sizeY = 32
+	
+	options.cameraMovementSpeed = 0.1
+	options.cameraTurboSpeed = 0.25
 
 ENDFUNCTION
 
@@ -77,5 +117,88 @@ STATIC b1_tmp, b2_tmp, press_init, press_timer_old
 	mouse.b2 = b2
 	mouse.b1_press = b1_press
 	mouse.b2_press = b2_press
+
+ENDFUNCTION
+
+FUNCTION system_movement:
+LOCAL turbo
+
+	IF KEY(42) = TRUE
+		turbo = options.cameraTurboSpeed
+	ELSE
+		turbo = 0
+	ENDIF
+	
+	PRINT turbo, 0, 0
+
+	IF mapInfos.sizeX * 32 > 768
+		// Taste A
+		IF KEY(30) = TRUE
+			INC mapInfos.offsetX, (options.cameraMovementSpeed + turbo) * GETTIMER()
+			IF mapInfos.offsetX > 0 THEN mapInfos.offsetX = 0
+		ENDIF
+		
+		// Taste D
+		IF KEY(32) = TRUE
+			DEC mapInfos.offsetX, (options.cameraMovementSpeed + turbo) * GETTIMER()
+			IF mapInfos.offsetX < (mapInfos.sizeX * 32 - 768) * -1 THEN mapInfos.offsetX = (mapInfos.sizeX * 32 - 768) * -1
+		ENDIF
+	ENDIF
+	
+	IF mapInfos.sizeY * 32 > 768
+		// Taste W
+		IF KEY(17) = TRUE
+			INC mapInfos.offsetY, (options.cameraMovementSpeed + turbo) * GETTIMER()
+			IF mapInfos.offsetY > 0 THEN mapInfos.offsetY = 0
+		ENDIF	
+		
+		// Taste S
+		IF KEY(31) = TRUE
+			DEC mapInfos.offsetY, (options.cameraMovementSpeed + turbo) * GETTIMER()
+			IF mapInfos.offsetY < (mapInfos.sizeY * 32 - 768) * -1 THEN mapInfos.offsetY = (mapInfos.sizeY * 32 - 768) * -1
+		ENDIF
+	ENDIF
+
+ENDFUNCTION
+
+FUNCTION drawCircle: x, y, radius
+LOCAL tmpX, tmpY, phi
+
+	FOR phi = 0 TO 359
+
+		 tmpX = x + radius * COS(phi)
+		 tmpY = y + radius * SIN(phi)
+
+		SETPIXEL tmpX, tmpY, RGB(255, 255, 255)
+	NEXT
+
+ENDFUNCTION
+
+FUNCTION drawGround:
+LOCAL tmpX, tmpY
+
+	FOR tmpY = 0 TO mapInfos.sizeY - 1
+		FOR tmpX = 0 TO mapInfos.sizeX - 1
+			DRAWSPRITE 0, tmpX * 32 + mapInfos.offsetX, tmpY * 32 + mapInfos.offsetY
+			setMarker(tmpX, tmpY)
+		NEXT
+	NEXT
+
+ENDFUNCTION
+
+FUNCTION setMarker: x, y
+
+	mapInfos.markerX = x
+	mapInfos.markerY = y
+
+ENDFUNCTION
+
+FUNCTION drawMarker:
+	DRAWSPRITE 1, mapInfos.markerX, mapInfos.markerY
+ENDFUNCTION
+
+FUNCTION drawMenu:
+
+	DRAWRECT 768, 0, 256, 768, RGB(32, 32, 32)
 
 ENDFUNCTION
