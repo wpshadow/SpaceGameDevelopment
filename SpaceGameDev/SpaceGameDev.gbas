@@ -26,7 +26,7 @@ TYPE mapInfos_TYPE
 
 ENDTYPE
 
-TYPE system_mouseType
+TYPE system_mouse_TYPE
 	x
 	y
 	b1
@@ -35,7 +35,7 @@ TYPE system_mouseType
 	b2_press
 ENDTYPE
 
-GLOBAL mouse AS system_mouseType, mapInfos AS mapInfos_TYPE, options AS options_TYPE
+GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE
 
 main()
 
@@ -180,7 +180,11 @@ LOCAL tmpX, tmpY
 	FOR tmpY = 0 TO mapInfos.sizeY - 1
 		FOR tmpX = 0 TO mapInfos.sizeX - 1
 			DRAWSPRITE 0, tmpX * 32 + mapInfos.offsetX, tmpY * 32 + mapInfos.offsetY
-			setMarker(tmpX, tmpY)
+			
+			IF mouse.x >= tmpX * 32 + mapInfos.offsetX AND mouse.x <= tmpX * 32 + mapInfos.offsetX + 32
+				setMarker(tmpX, tmpY)
+			ENDIF
+			
 		NEXT
 	NEXT
 
@@ -194,7 +198,7 @@ FUNCTION setMarker: x, y
 ENDFUNCTION
 
 FUNCTION drawMarker:
-	DRAWSPRITE 1, mapInfos.markerX, mapInfos.markerY
+	DRAWSPRITE 1, mapInfos.markerX * 32, mapInfos.markerY + 1
 ENDFUNCTION
 
 FUNCTION drawMenu:
