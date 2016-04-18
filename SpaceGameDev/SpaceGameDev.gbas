@@ -69,7 +69,7 @@ FUNCTION init:
 	AUTOPAUSE FALSE
 	SYSTEMPOINTER TRUE
 
-	mapInfos.sizeX = 28
+	mapInfos.sizeX = 32
 	mapInfos.sizeY = 32
 
 	options.cameraMovementSpeed = 0.1
@@ -83,22 +83,22 @@ LOCAL ok, enumWert, name$
 	ok = DOESFILEEXIST("media/file.lst")
 
 	IF ok = TRUE
-		
+
 		OPENFILE(0, "media/file.lst", 1)
 
 		WHILE ENDOFFILE(0) = FALSE
-			
+
 			READLINE 0, name$
-			
+
 			LOADSPRITE name$, enumWert
-			
+
 			INC enumWert, 1
-					
+
 			//LOADSPRITE "media/rect.png", 0
 			//LOADSPRITE "media/border.png", 1
-		
+
 		WEND
-		
+
 	ELSE
 		END
 	ENDIF
@@ -203,11 +203,20 @@ LOCAL tmpX, tmpY, phi
 ENDFUNCTION
 
 FUNCTION drawGround:
-LOCAL tmpX, tmpY
+LOCAL tmpX, tmpY, counter
 
 	FOR tmpY = 0 TO mapInfos.sizeY - 1
 		FOR tmpX = 0 TO mapInfos.sizeX - 1
-			DRAWSPRITE 0, tmpX * 32 + mapInfos.offsetX, tmpY * 32 + mapInfos.offsetY
+			
+			
+			IF (tmpX * 32 + mapInfos.offsetX) > -32 AND (tmpX * 32 + mapInfos.offsetX) < 768 AND (tmpY * 32 + mapInfos.offsetY) > -32 AND (tmpY * 32 + mapInfos.offsetY) < 768
+				
+				DRAWSPRITE 0, tmpX * 32 + mapInfos.offsetX, tmpY * 32 + mapInfos.offsetY
+				
+				INC counter, 1
+
+			ENDIF
+
 
 			IF mouse.x >= tmpX * 32 + mapInfos.offsetX AND mouse.x <= tmpX * 32 + mapInfos.offsetX + 32 AND mouse.y >= tmpY * 32 + mapInfos.offsetY AND mouse.y <= tmpY * 32 + mapInfos.offsetY + 32 AND mouse.x < 768
 				setMarker(tmpX * 32 + mapInfos.offsetX, tmpY * 32 + mapInfos.offsetY)
@@ -215,6 +224,8 @@ LOCAL tmpX, tmpY
 
 		NEXT
 	NEXT
+	
+	DEBUG counter + "\n"
 
 ENDFUNCTION
 
