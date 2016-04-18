@@ -43,8 +43,7 @@ main()
 FUNCTION main:
 
 	init()
-	LOADSPRITE "media/rect.png", 0
-	LOADSPRITE "media/border.png", 1
+	loader()
 
 	WHILE TRUE
 
@@ -75,6 +74,35 @@ FUNCTION init:
 
 	options.cameraMovementSpeed = 0.1
 	options.cameraTurboSpeed = 0.25
+
+ENDFUNCTION
+
+FUNCTION loader:
+LOCAL ok, enumWert, name$
+
+	ok = DOESFILEEXIST("media/file.lst")
+
+	IF ok = TRUE
+		
+		OPENFILE(0, "media/file.lst", 1)
+
+		WHILE ENDOFFILE(0) = FALSE
+			
+			READLINE 0, name$
+			
+			LOADSPRITE name$, enumWert
+			
+			INC enumWert, 1
+					
+			//LOADSPRITE "media/rect.png", 0
+			//LOADSPRITE "media/border.png", 1
+		
+		WEND
+		
+	ELSE
+		END
+	ENDIF
+
 
 ENDFUNCTION
 
@@ -205,6 +233,14 @@ ENDFUNCTION
 
 FUNCTION drawMenu:
 
-	DRAWRECT 768, 0, 256, 768, RGB(32, 32, 32)
+	STARTPOLY
+		POLYVECTOR 768, 0, 0, 0, RGB(32, 32, 32)
+		POLYVECTOR 768, 768, 0, 0, RGB(32, 32, 32)
+		POLYVECTOR 1024, 768, 0, 0, RGB(0, 0, 0)
+		POLYVECTOR 1024, 0, 0, 0, RGB(0, 0, 0)
+	ENDPOLY
+
+
+	//DRAWRECT 768, 0, 256, 768, RGB(32, 32, 32)
 
 ENDFUNCTION
