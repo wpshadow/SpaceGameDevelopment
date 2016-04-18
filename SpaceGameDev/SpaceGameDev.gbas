@@ -7,7 +7,7 @@
 // SETCURRENTDIR("Media") // go to media files
 
 TYPE options_TYPE
-	
+
 	cameraMovementSpeed
 	cameraTurboSpeed
 
@@ -55,7 +55,7 @@ FUNCTION main:
 		drawMarker()
 
 		drawMenu()
-		
+
 		//drawCircle(100, 100, 200)
 
 
@@ -69,10 +69,10 @@ FUNCTION init:
 
 	AUTOPAUSE FALSE
 	SYSTEMPOINTER TRUE
-	
+
 	mapInfos.sizeX = 28
 	mapInfos.sizeY = 32
-	
+
 	options.cameraMovementSpeed = 0.1
 	options.cameraTurboSpeed = 0.25
 
@@ -128,7 +128,7 @@ LOCAL turbo
 	ELSE
 		turbo = 0
 	ENDIF
-	
+
 	PRINT turbo, 0, 0
 
 	IF mapInfos.sizeX * 32 > 768
@@ -137,21 +137,21 @@ LOCAL turbo
 			INC mapInfos.offsetX, (options.cameraMovementSpeed + turbo) * GETTIMER()
 			IF mapInfos.offsetX > 0 THEN mapInfos.offsetX = 0
 		ENDIF
-		
+
 		// Taste D
 		IF KEY(32) = TRUE
 			DEC mapInfos.offsetX, (options.cameraMovementSpeed + turbo) * GETTIMER()
 			IF mapInfos.offsetX < (mapInfos.sizeX * 32 - 768) * -1 THEN mapInfos.offsetX = (mapInfos.sizeX * 32 - 768) * -1
 		ENDIF
 	ENDIF
-	
+
 	IF mapInfos.sizeY * 32 > 768
 		// Taste W
 		IF KEY(17) = TRUE
 			INC mapInfos.offsetY, (options.cameraMovementSpeed + turbo) * GETTIMER()
 			IF mapInfos.offsetY > 0 THEN mapInfos.offsetY = 0
-		ENDIF	
-		
+		ENDIF
+
 		// Taste S
 		IF KEY(31) = TRUE
 			DEC mapInfos.offsetY, (options.cameraMovementSpeed + turbo) * GETTIMER()
@@ -180,11 +180,11 @@ LOCAL tmpX, tmpY
 	FOR tmpY = 0 TO mapInfos.sizeY - 1
 		FOR tmpX = 0 TO mapInfos.sizeX - 1
 			DRAWSPRITE 0, tmpX * 32 + mapInfos.offsetX, tmpY * 32 + mapInfos.offsetY
-			
-			IF mouse.x >= tmpX * 32 + mapInfos.offsetX AND mouse.x <= tmpX * 32 + mapInfos.offsetX + 32
-				setMarker(tmpX, tmpY)
+
+			IF mouse.x >= tmpX * 32 + mapInfos.offsetX AND mouse.x <= tmpX * 32 + mapInfos.offsetX + 32 AND mouse.y >= tmpY * 32 + mapInfos.offsetY AND mouse.y <= tmpY * 32 + mapInfos.offsetY + 32
+				setMarker(tmpX * 32 + mapInfos.offsetX, tmpY * 32 + mapInfos.offsetY)
 			ENDIF
-			
+
 		NEXT
 	NEXT
 
@@ -198,7 +198,9 @@ FUNCTION setMarker: x, y
 ENDFUNCTION
 
 FUNCTION drawMarker:
-	DRAWSPRITE 1, mapInfos.markerX * 32, mapInfos.markerY + 1
+	IF mouse.x < 768
+		DRAWSPRITE 1, mapInfos.markerX, mapInfos.markerY
+	ENDIF
 ENDFUNCTION
 
 FUNCTION drawMenu:
