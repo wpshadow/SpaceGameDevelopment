@@ -35,7 +35,17 @@ TYPE system_mouse_TYPE
 	b2_press
 ENDTYPE
 
-GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE
+TYPE ground_TYPE
+	id
+	position AS position_TYPE
+ENDTYPE
+
+TYPE position_TYPE
+	x
+	y
+ENDTYPE
+
+GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE, ground[] AS ground_TYPE
 
 main()
 
@@ -44,6 +54,7 @@ FUNCTION main:
 
 	init()
 	loader()
+	generateGround()
 
 	WHILE TRUE
 
@@ -51,6 +62,7 @@ FUNCTION main:
 		system_movement()
 
 		drawGround()
+		drawGrid()
 		drawMarker()
 
 		drawMenu()
@@ -202,17 +214,17 @@ LOCAL tmpX, tmpY, phi
 
 ENDFUNCTION
 
-FUNCTION drawGround:
+FUNCTION drawGrid:
 LOCAL tmpX, tmpY, counter
 
 	FOR tmpY = 0 TO mapInfos.sizeY - 1
 		FOR tmpX = 0 TO mapInfos.sizeX - 1
-			
-			
+
+
 			IF (tmpX * 32 + mapInfos.offsetX) > -32 AND (tmpX * 32 + mapInfos.offsetX) < 768 AND (tmpY * 32 + mapInfos.offsetY) > -32 AND (tmpY * 32 + mapInfos.offsetY) < 768
-				
+
 				DRAWSPRITE 0, tmpX * 32 + mapInfos.offsetX, tmpY * 32 + mapInfos.offsetY
-				
+
 				INC counter, 1
 
 			ENDIF
@@ -224,8 +236,31 @@ LOCAL tmpX, tmpY, counter
 
 		NEXT
 	NEXT
+
+ENDFUNCTION
+
+FUNCTION generateGround:
+LOCAL tmpX, tmpY
+
+	DIM ground[mapInfos.sizeX][mapInfos.sizeY][10]
 	
-	DEBUG counter + "\n"
+	FOR tmpY = 0 TO mapInfos.sizeY - 1
+		FOR tmpX = 0 TO mapInfos.sizeX - 1
+			ground[tmpX][tmpY][0].id = 2
+			ground[tmpX][tmpY][0].position.x = tmpX * 32
+			ground[tmpX][tmpY][0].position.y = tmpY * 32
+		NEXT
+	NEXT
+
+ENDFUNCTION
+
+FUNCTION drawGround:
+
+	FOR tmpY = 0 TO mapInfos.sizeY - 1
+		FOR tmpX = 0 TO mapInfos.sizeX - 1
+			DRAWSPRITE ground[tmpX][tmpY][0].id, ground[tmpX][tmpY][0].position.x + mapInfos.offsetX, ground[tmpX][tmpY][0].position.y + mapInfos.offsetY
+		NEXT
+	NEXT
 
 ENDFUNCTION
 
