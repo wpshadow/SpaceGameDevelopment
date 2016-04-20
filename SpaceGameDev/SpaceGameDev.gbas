@@ -35,7 +35,7 @@ TYPE system_mouse_TYPE
 	b2_press
 ENDTYPE
 
-TYPE ground_TYPE
+TYPE sprite_TYPE
 	id
 	position AS position_TYPE
 ENDTYPE
@@ -45,7 +45,22 @@ TYPE position_TYPE
 	y
 ENDTYPE
 
-GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE, ground[] AS ground_TYPE
+TYPE gui_TYPE
+
+	button AS button_TYPE
+
+ENDTYPE
+
+TYPE button_TYPE
+	position AS position_TYPE	
+	
+ENDTYPE
+
+TYPE mapEditor_TYPE
+	active
+ENDTYPE
+
+GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE, ground[] AS sprite_TYPE, wall[] AS sprite_TYPE, gui[] AS gui_TYPE, mapEditor AS mapEditor_TYPE
 
 main()
 
@@ -242,23 +257,58 @@ ENDFUNCTION
 FUNCTION generateGround:
 LOCAL tmpX, tmpY
 
-	DIM ground[mapInfos.sizeX][mapInfos.sizeY][10]
-	
+	DIM ground[mapInfos.sizeX][mapInfos.sizeY]
+	DIM wall[mapInfos.sizeX][mapInfos.sizeY]
+
 	FOR tmpY = 0 TO mapInfos.sizeY - 1
 		FOR tmpX = 0 TO mapInfos.sizeX - 1
-			ground[tmpX][tmpY][0].id = 2
-			ground[tmpX][tmpY][0].position.x = tmpX * 32
-			ground[tmpX][tmpY][0].position.y = tmpY * 32
+			ground[tmpX][tmpY].id = 2
+			ground[tmpX][tmpY].position.x = tmpX * 32
+			ground[tmpX][tmpY].position.y = tmpY * 32
+
+			IF tmpX = 0 OR tmpX = mapInfos.sizeX - 1 OR tmpY = 0 OR tmpY = mapInfos.sizeY - 1
+				wall[tmpX][tmpY].id = 3
+				wall[tmpX][tmpY].position.x = tmpX * 32
+				wall[tmpX][tmpY].position.y = tmpY * 32
+			ELSE
+				wall[tmpX][tmpY].id = 4
+				wall[tmpX][tmpY].position.x = tmpX * 32
+				wall[tmpX][tmpY].position.y = tmpY * 32			
+			ENDIF
+
 		NEXT
 	NEXT
 
 ENDFUNCTION
 
+
+
 FUNCTION drawGround:
 
 	FOR tmpY = 0 TO mapInfos.sizeY - 1
 		FOR tmpX = 0 TO mapInfos.sizeX - 1
-			DRAWSPRITE ground[tmpX][tmpY][0].id, ground[tmpX][tmpY][0].position.x + mapInfos.offsetX, ground[tmpX][tmpY][0].position.y + mapInfos.offsetY
+			DRAWSPRITE ground[tmpX][tmpY].id, ground[tmpX][tmpY].position.x + mapInfos.offsetX, ground[tmpX][tmpY].position.y + mapInfos.offsetY
+
+			IF wall[tmpX][tmpY].id > 0
+				DRAWSPRITE wall[tmpX][tmpY].id, wall[tmpX][tmpY].position.x + mapInfos.offsetX, wall[tmpX][tmpY].position.y + mapInfos.offsetY
+			ENDIF
+			
+			IF mapEditor.active = TRUE
+				IF mouse.x >= tmpX * 32 + mapInfos.offsetX AND mouse.x <= tmpX * 32 + mapInfos.offsetX + 32 AND mouse.y >= tmpY * 32 + mapInfos.offsetY AND mouse.y <= tmpY * 32 + mapInfos.offsetY + 32 AND mouse.x < 768
+					IF mouse.b1 = 1 OR mouse.b1_press = 1
+						IF wall[tmpX][tmpY].id = 4
+							wall[tmpX][tmpY].id = 0
+						ENDIF
+					ENDIF
+									
+					IF mouse.b2 = 1 OR mouse.b2_press
+						IF wall[tmpX][tmpY].id = 0
+							wall[tmpX][tmpY].id = 4
+						ENDIF				
+					ENDIF
+				ENDIF
+			ENDIF
+
 		NEXT
 	NEXT
 
