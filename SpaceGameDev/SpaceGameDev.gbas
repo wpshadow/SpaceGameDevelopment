@@ -45,28 +45,43 @@ TYPE position_TYPE
 	y
 ENDTYPE
 
+TYPE size_TYPE
+	width
+	length
+ENDTYPE
+
 TYPE gui_TYPE
 
+	typ
 	button AS button_TYPE
 
 ENDTYPE
 
 TYPE button_TYPE
-	position AS position_TYPE	
-	
+	text$
+	returnID
+	position AS position_TYPE
+	size AS size_TYPE
 ENDTYPE
 
 TYPE mapEditor_TYPE
 	active
 ENDTYPE
 
+TYPE font_TYPE
+	sizeX
+	sizeY
+ENDTYPE
+
 GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE, ground[] AS sprite_TYPE, wall[] AS sprite_TYPE, gui[] AS gui_TYPE, mapEditor AS mapEditor_TYPE
+GLOBAL font AS font_TYPE
+
 
 main()
 
 
 FUNCTION main:
-
+LOCAL guiFeedback
 	init()
 	loader()
 	generateGround()
@@ -81,7 +96,13 @@ FUNCTION main:
 		drawMarker()
 
 		drawMenu()
+		
+		guiFeedback = gui_update()
 
+		IF guiFeedback > 0
+			processFeedback(guiFeedback)
+		ENDIF
+		
 		//drawCircle(100, 100, 200)
 
 
@@ -101,6 +122,8 @@ FUNCTION init:
 
 	options.cameraMovementSpeed = 0.1
 	options.cameraTurboSpeed = 0.25
+	
+	gui_addButton("", 0, 778, 10, 236, 40)
 
 ENDFUNCTION
 
@@ -129,7 +152,18 @@ LOCAL ok, enumWert, name$
 	ELSE
 		END
 	ENDIF
+	
+	LOADFONT "media/font.png", 0
+	checkFont(0)
+	SETFONT 0
+	
 
+ENDFUNCTION
+
+FUNCTION checkFont: id
+
+	SETFONT id
+	GETFONTSIZE font.sizeX, font.sizeY
 
 ENDFUNCTION
 
@@ -273,7 +307,7 @@ LOCAL tmpX, tmpY
 			ELSE
 				wall[tmpX][tmpY].id = 4
 				wall[tmpX][tmpY].position.x = tmpX * 32
-				wall[tmpX][tmpY].position.y = tmpY * 32			
+				wall[tmpX][tmpY].position.y = tmpY * 32
 			ENDIF
 
 		NEXT
@@ -292,7 +326,7 @@ FUNCTION drawGround:
 			IF wall[tmpX][tmpY].id > 0
 				DRAWSPRITE wall[tmpX][tmpY].id, wall[tmpX][tmpY].position.x + mapInfos.offsetX, wall[tmpX][tmpY].position.y + mapInfos.offsetY
 			ENDIF
-			
+
 			IF mapEditor.active = TRUE
 				IF mouse.x >= tmpX * 32 + mapInfos.offsetX AND mouse.x <= tmpX * 32 + mapInfos.offsetX + 32 AND mouse.y >= tmpY * 32 + mapInfos.offsetY AND mouse.y <= tmpY * 32 + mapInfos.offsetY + 32 AND mouse.x < 768
 					IF mouse.b1 = 1 OR mouse.b1_press = 1
@@ -300,11 +334,11 @@ FUNCTION drawGround:
 							wall[tmpX][tmpY].id = 0
 						ENDIF
 					ENDIF
-									
+
 					IF mouse.b2 = 1 OR mouse.b2_press
 						IF wall[tmpX][tmpY].id = 0
 							wall[tmpX][tmpY].id = 4
-						ENDIF				
+						ENDIF
 					ENDIF
 				ENDIF
 			ENDIF
@@ -338,5 +372,41 @@ FUNCTION drawMenu:
 
 
 	//DRAWRECT 768, 0, 256, 768, RGB(32, 32, 32)
+
+ENDFUNCTION
+
+FUNCTION gui_addButton: text$, returnID, x, y, length, width
+LOCAL g AS gui_TYPE
+
+	IF x >= 768
+		
+		g.typ = 1
+		g.button.text$ = text$
+		g.button.returnID = returnID
+		g.button.position.x = x
+		g.button.position.y = y
+		g.button.size.length = length
+		g.button.size.width = width
+		DIMPUSH gui[], g
+	
+	ENDIF
+
+ENDFUNCTION
+
+FUNCTION gui_update:
+
+	IF LEN(gui[]) > 0
+		FOREACH g IN gui[]
+			SELECT g.typ
+			CASE 1
+				DRAWRECT g.button.position.x, g.button.position.y, g.button.size.length, g.button.size.width, RGB(0, 32, 96)
+				PRINT "test", g.button.position.x, g.button.position.y
+			ENDSELECT
+		NEXT
+	ENDIF
+
+ENDFUNCTION
+
+FUNCTION processFeedback: guiFeedback
 
 ENDFUNCTION
