@@ -96,13 +96,13 @@ LOCAL guiFeedback
 		drawMarker()
 
 		drawMenu()
-		
+
 		guiFeedback = gui_update()
 
 		IF guiFeedback > 0
 			processFeedback(guiFeedback)
 		ENDIF
-		
+
 		//drawCircle(100, 100, 200)
 
 
@@ -122,8 +122,8 @@ FUNCTION init:
 
 	options.cameraMovementSpeed = 0.1
 	options.cameraTurboSpeed = 0.25
-	
-	gui_addButton("", 0, 778, 10, 236, 40)
+
+	gui_addButton("Test", 1, 778, 10, 236, 40)
 
 ENDFUNCTION
 
@@ -152,11 +152,11 @@ LOCAL ok, enumWert, name$
 	ELSE
 		END
 	ENDIF
-	
+
 	LOADFONT "media/font.png", 0
 	checkFont(0)
 	SETFONT 0
-	
+
 
 ENDFUNCTION
 
@@ -379,7 +379,7 @@ FUNCTION gui_addButton: text$, returnID, x, y, length, width
 LOCAL g AS gui_TYPE
 
 	IF x >= 768
-		
+
 		g.typ = 1
 		g.button.text$ = text$
 		g.button.returnID = returnID
@@ -388,25 +388,62 @@ LOCAL g AS gui_TYPE
 		g.button.size.length = length
 		g.button.size.width = width
 		DIMPUSH gui[], g
-	
+
 	ENDIF
 
 ENDFUNCTION
 
 FUNCTION gui_update:
+LOCAL buttonColorR, buttonColorG, buttonColorB, returnID
 
 	IF LEN(gui[]) > 0
 		FOREACH g IN gui[]
 			SELECT g.typ
 			CASE 1
-				DRAWRECT g.button.position.x, g.button.position.y, g.button.size.length, g.button.size.width, RGB(0, 32, 96)
-				PRINT "test", g.button.position.x, g.button.position.y
+				IF mouse.x > g.button.position.x AND mouse.x <= g.button.position.x + g.button.size.length AND mouse.y > g.button.position.y AND mouse.y <= g.button.position.y + g.button.size.width
+					IF mouse.b1_press
+						buttonColorR = 0
+						buttonColorG = 96
+						buttonColorB = 160
+					ELSE
+
+						buttonColorR = 0
+						buttonColorG = 64
+						buttonColorB = 128
+					ENDIF						
+				ELSE
+					buttonColorR = 0
+					buttonColorG = 32
+					buttonColorB = 96				
+				ENDIF
+				
+				DRAWRECT g.button.position.x, g.button.position.y, g.button.size.length, g.button.size.width, RGB(buttonColorR, buttonColorG, buttonColorB)
+				gui_printCentralPosition(g.button.text$, g.button.position.x, g.button.position.y, g.button.size.length, g.button.size.width)
+					
+				IF mouse.b1 = TRUE
+					returnID = g.button.returnID
+				ENDIF
+				
 			ENDSELECT
 		NEXT
 	ENDIF
 
+	IF returnID > 0
+		RETURN returnID
+	ENDIF
+
+ENDFUNCTION
+
+FUNCTION gui_printCentralPosition: text$, x, y, length, width
+LOCAL posX, posY
+
+	posX = x + ((length - (LEN(text$) * font.sizeX)) / 2)
+	posY = y + (width - font.sizeY) / 2
+	
+	PRINT text$, posX, posY
+	
 ENDFUNCTION
 
 FUNCTION processFeedback: guiFeedback
-
+	IF guiFeedback = 1 THEN END
 ENDFUNCTION
