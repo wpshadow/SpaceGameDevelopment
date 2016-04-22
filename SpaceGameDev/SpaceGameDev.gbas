@@ -434,6 +434,14 @@ LOCAL buttonColorR, buttonColorG, buttonColorB, returnID
 
 ENDFUNCTION
 
+FUNCTION gui_RESET:
+
+	FOREACH g IN gui[]
+		DELETE g
+	NEXT
+
+ENDFUNCTION
+
 FUNCTION gui_printCentralPosition: text$, x, y, length, width
 LOCAL posX, posY
 
@@ -445,5 +453,5 @@ LOCAL posX, posY
 ENDFUNCTION
 
 FUNCTION processFeedback: guiFeedback
-	IF guiFeedback = 1 THEN END
+	IF guiFeedback = 1 THEN gui_RESET()
 ENDFUNCTION
