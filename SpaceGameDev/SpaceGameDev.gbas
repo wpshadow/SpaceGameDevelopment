@@ -410,20 +410,20 @@ LOCAL buttonColorR, buttonColorG, buttonColorB, returnID
 						buttonColorR = 0
 						buttonColorG = 64
 						buttonColorB = 128
-					ENDIF						
+					ENDIF
 				ELSE
 					buttonColorR = 0
 					buttonColorG = 32
-					buttonColorB = 96				
+					buttonColorB = 96
 				ENDIF
-				
+
 				DRAWRECT g.button.position.x, g.button.position.y, g.button.size.length, g.button.size.width, RGB(buttonColorR, buttonColorG, buttonColorB)
 				gui_printCentralPosition(g.button.text$, g.button.position.x, g.button.position.y, g.button.size.length, g.button.size.width)
-					
+
 				IF mouse.b1 = TRUE
 					returnID = g.button.returnID
 				ENDIF
-				
+
 			ENDSELECT
 		NEXT
 	ENDIF
@@ -447,9 +447,9 @@ LOCAL posX, posY
 
 	posX = x + ((length - (LEN(text$) * font.sizeX)) / 2)
 	posY = y + (width - font.sizeY) / 2
-	
+
 	PRINT text$, posX, posY
-	
+
 ENDFUNCTION
 
 FUNCTION processFeedback: guiFeedback
