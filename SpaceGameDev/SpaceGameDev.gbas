@@ -40,6 +40,17 @@ TYPE sprite_TYPE
 	position AS position_TYPE
 ENDTYPE
 
+TYPE ground_TYPE
+	spriteID
+	position AS position_TYPE
+ENDTYPE
+
+TYPE wall_TYPE
+	typID
+	spriteID
+	position AS position_TYPE
+ENDTYPE
+
 TYPE position_TYPE
 	x
 	y
@@ -73,8 +84,16 @@ TYPE font_TYPE
 	sizeY
 ENDTYPE
 
+TYPE anim_TYPE
+	spriteCounter
+	sprite[]
+	position AS position_TYPE
+	stepTime
+ENDTYPE
+
 GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE, ground[] AS sprite_TYPE, wall[] AS sprite_TYPE, gui[] AS gui_TYPE, mapEditor AS mapEditor_TYPE
-GLOBAL font AS font_TYPE
+GLOBAL font AS font_TYPE, sprite[] AS sprite_TYPE
+
 
 
 main()
@@ -82,9 +101,11 @@ main()
 
 FUNCTION main:
 LOCAL guiFeedback
+
 	init()
 	loader()
-	generateGround()
+
+	generateLevel()
 
 	WHILE TRUE
 
@@ -128,21 +149,44 @@ FUNCTION init:
 ENDFUNCTION
 
 FUNCTION loader:
-LOCAL ok, enumWert, name$
+LOCAL ok, enumWert, tmp$, split$[], typ, openID, s AS sprite_TYPE
 
 	ok = DOESFILEEXIST("media/file.lst")
 
 	IF ok = TRUE
-
+		
 		OPENFILE(0, "media/file.lst", 1)
 
 		WHILE ENDOFFILE(0) = FALSE
 
-			READLINE 0, name$
+			READLINE 0, tmp$
+			
+			SPLITSTR(tmp$, split$[], ";")
 
-			LOADSPRITE name$, enumWert
+			typ = split$[0]
+			
+			SELECT typ
+			CASE 0
+				
+				openID = GENSPRITE ()
+				LOADSPRITE split$[1], openID
+				DEBUG split$[1] + " "
+				s.id = openID
+				DIMPUSH sprite[], s
+				
+				
+			CASE 1
+				
+				openID = GENSPRITE ()
+				LOADANIM split$[1], openID, 32, 32
+				DEBUG split$[1] + " "
+				
+			ENDSELECT
+	
+	
+				
 
-			INC enumWert, 1
+				
 
 			//LOADSPRITE "media/rect.png", 0
 			//LOADSPRITE "media/border.png", 1
@@ -288,7 +332,7 @@ LOCAL tmpX, tmpY, counter
 
 ENDFUNCTION
 
-FUNCTION generateGround:
+FUNCTION generateLevel:
 LOCAL tmpX, tmpY
 
 	DIM ground[mapInfos.sizeX][mapInfos.sizeY]
@@ -420,7 +464,7 @@ LOCAL buttonColorR, buttonColorG, buttonColorB, returnID
 				DRAWRECT g.button.position.x, g.button.position.y, g.button.size.length, g.button.size.width, RGB(buttonColorR, buttonColorG, buttonColorB)
 				gui_printCentralPosition(g.button.text$, g.button.position.x, g.button.position.y, g.button.size.length, g.button.size.width)
 
-				IF mouse.b1 = TRUE
+				IF mouse.b1 = TRUE AND mouse.x > g.button.position.x AND mouse.x <= g.button.position.x + g.button.size.length AND mouse.y > g.button.position.y AND mouse.y <= g.button.position.y + g.button.size.width
 					returnID = g.button.returnID
 				ENDIF
 

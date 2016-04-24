@@ -1,5 +1,6 @@
-media/rect.png
-media/border.png
-media/dirt.png
-media/borderWall.png
-media/wall.png
+0;media/rect.png
+0;media/border.png
+0;media/dirt.png
+0;media/borderWall.png
+0;media/wall.png
+1;media/animations/tor.anim
