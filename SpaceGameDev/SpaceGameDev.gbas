@@ -154,39 +154,39 @@ LOCAL ok, enumWert, tmp$, split$[], typ, openID, s AS sprite_TYPE
 	ok = DOESFILEEXIST("media/file.lst")
 
 	IF ok = TRUE
-		
+
 		OPENFILE(0, "media/file.lst", 1)
 
 		WHILE ENDOFFILE(0) = FALSE
 
 			READLINE 0, tmp$
-			
+
 			SPLITSTR(tmp$, split$[], ";")
 
 			typ = split$[0]
-			
+
 			SELECT typ
 			CASE 0
-				
+
 				openID = GENSPRITE ()
 				LOADSPRITE split$[1], openID
-				DEBUG split$[1] + " "
+				DEBUG openID + " " + split$[1] + "\n"
 				s.id = openID
 				DIMPUSH sprite[], s
-				
-				
+
+
 			CASE 1
-				
+
 				openID = GENSPRITE ()
 				LOADANIM split$[1], openID, 32, 32
 				DEBUG split$[1] + " "
-				
-			ENDSELECT
-	
-	
-				
 
-				
+			ENDSELECT
+
+
+
+
+
 
 			//LOADSPRITE "media/rect.png", 0
 			//LOADSPRITE "media/border.png", 1
@@ -316,7 +316,7 @@ LOCAL tmpX, tmpY, counter
 
 			IF (tmpX * 32 + mapInfos.offsetX) > -32 AND (tmpX * 32 + mapInfos.offsetX) < 768 AND (tmpY * 32 + mapInfos.offsetY) > -32 AND (tmpY * 32 + mapInfos.offsetY) < 768
 
-				DRAWSPRITE 0, tmpX * 32 + mapInfos.offsetX, tmpY * 32 + mapInfos.offsetY
+				DRAWSPRITE sprite[0].id, tmpX * 32 + mapInfos.offsetX, tmpY * 32 + mapInfos.offsetY
 
 				INC counter, 1
 
@@ -365,10 +365,10 @@ FUNCTION drawGround:
 
 	FOR tmpY = 0 TO mapInfos.sizeY - 1
 		FOR tmpX = 0 TO mapInfos.sizeX - 1
-			DRAWSPRITE ground[tmpX][tmpY].id, ground[tmpX][tmpY].position.x + mapInfos.offsetX, ground[tmpX][tmpY].position.y + mapInfos.offsetY
+			DRAWSPRITE sprite[ground[tmpX][tmpY].id].id, ground[tmpX][tmpY].position.x + mapInfos.offsetX, ground[tmpX][tmpY].position.y + mapInfos.offsetY
 
 			IF wall[tmpX][tmpY].id > 0
-				DRAWSPRITE wall[tmpX][tmpY].id, wall[tmpX][tmpY].position.x + mapInfos.offsetX, wall[tmpX][tmpY].position.y + mapInfos.offsetY
+				DRAWSPRITE sprite[wall[tmpX][tmpY].id].id, wall[tmpX][tmpY].position.x + mapInfos.offsetX, wall[tmpX][tmpY].position.y + mapInfos.offsetY
 			ENDIF
 
 			IF mapEditor.active = TRUE
@@ -401,7 +401,7 @@ ENDFUNCTION
 
 FUNCTION drawMarker:
 	IF mouse.x < 768
-		DRAWSPRITE 1, mapInfos.markerX, mapInfos.markerY
+		DRAWSPRITE sprite[1].id, mapInfos.markerX, mapInfos.markerY
 	ENDIF
 ENDFUNCTION
 
