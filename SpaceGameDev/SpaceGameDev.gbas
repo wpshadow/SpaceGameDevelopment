@@ -85,10 +85,14 @@ TYPE font_TYPE
 ENDTYPE
 
 TYPE anim_TYPE
+	name$
 	spriteCounter
-	sprite[]
+	spriteSteps
+	spriteID
 	position AS position_TYPE
 	stepTime
+	stepTimeOld
+	currentStep
 ENDTYPE
 
 GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE, ground[] AS ground_TYPE, wall[] AS sprite_TYPE, gui[] AS gui_TYPE, mapEditor AS mapEditor_TYPE
@@ -104,6 +108,7 @@ LOCAL guiFeedback
 
 	init()
 	loader()
+	setAnimPosition("enemyGate", 32, 32)
 
 	generateLevel()
 
@@ -113,6 +118,7 @@ LOCAL guiFeedback
 		system_movement()
 
 		drawGround()
+		drawAnimation()
 		drawGrid()
 		drawMarker()
 
@@ -160,6 +166,8 @@ LOCAL ok, enumWert, tmp$, split$[], typ, openID, s AS sprite_TYPE
 		WHILE ENDOFFILE(0) = FALSE
 
 			READLINE 0, tmp$
+			
+			DEBUG tmp$ + "\n"
 
 			SPLITSTR(tmp$, split$[], ";")
 
@@ -178,7 +186,9 @@ LOCAL ok, enumWert, tmp$, split$[], typ, openID, s AS sprite_TYPE
 
 				openID = GENSPRITE ()
 				LOADANIM split$[1], openID, 32, 32
-
+				addAnimation(openID, split$[4], split$[2], split$[3])
+				
+				
 			ENDSELECT
 
 
@@ -501,4 +511,48 @@ ENDFUNCTION
 
 FUNCTION processFeedback: guiFeedback
 	IF guiFeedback = 1 THEN gui_RESET()
+ENDFUNCTION
+
+FUNCTION addAnimation: spriteID, name$, stepTime, spriteSteps
+LOCAL a AS anim_TYPE
+
+	a.spriteID = spriteID
+	a.name$ = name$
+	a.stepTime = stepTime
+	a.spriteSteps = spriteSteps
+	
+	DIMPUSH anim[], a
+
+ENDFUNCTION
+
+FUNCTION setAnimPosition: name$, posX, posY
+
+	FOREACH a IN anim[]
+		IF name$ = a.name$
+			a.position.x = posX
+			a.position.y = posY
+			BREAK
+		ENDIF
+	NEXT
+
+ENDFUNCTION
+
+FUNCTION drawAnimation:
+
+	FOREACH a IN anim[]
+
+		IF a.stepTimeOld < GETTIMERALL()
+			INC a.currentStep, 1
+			IF a.currentStep > a.spriteSteps - 1
+				a.currentStep = 0
+			ENDIF
+			a.stepTimeOld = GETTIMERALL() + a.stepTime
+		ENDIF
+		
+		
+		
+		DRAWANIM a.spriteID, a.currentStep, a.position.x, a.position.y
+		
+	NEXT
+
 ENDFUNCTION
