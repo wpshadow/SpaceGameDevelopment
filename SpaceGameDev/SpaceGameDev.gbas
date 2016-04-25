@@ -141,7 +141,7 @@ FUNCTION init:
 	mapInfos.sizeX = 32
 	mapInfos.sizeY = 32
 
-	options.cameraMovementSpeed = 0.1
+	options.cameraMovementSpeed = 0.15
 	options.cameraTurboSpeed = 0.25
 
 	gui_addButton("Test", 1, 778, 10, 236, 40)
@@ -365,10 +365,15 @@ FUNCTION drawGround:
 
 	FOR tmpY = 0 TO mapInfos.sizeY - 1
 		FOR tmpX = 0 TO mapInfos.sizeX - 1
-			DRAWSPRITE sprite[ground[tmpX][tmpY].id].id, ground[tmpX][tmpY].position.x + mapInfos.offsetX, ground[tmpX][tmpY].position.y + mapInfos.offsetY
-
+			
+			IF (tmpX * 32 + mapInfos.offsetX) > -32 AND (tmpX * 32 + mapInfos.offsetX) < 768 AND (tmpY * 32 + mapInfos.offsetY) > -32 AND (tmpY * 32 + mapInfos.offsetY) < 768
+				DRAWSPRITE sprite[ground[tmpX][tmpY].id].id, ground[tmpX][tmpY].position.x + mapInfos.offsetX, ground[tmpX][tmpY].position.y + mapInfos.offsetY
+			ENDIF
+			
 			IF wall[tmpX][tmpY].id > 0
-				DRAWSPRITE sprite[wall[tmpX][tmpY].id].id, wall[tmpX][tmpY].position.x + mapInfos.offsetX, wall[tmpX][tmpY].position.y + mapInfos.offsetY
+				IF (tmpX * 32 + mapInfos.offsetX) > -32 AND (tmpX * 32 + mapInfos.offsetX) < 768 AND (tmpY * 32 + mapInfos.offsetY) > -32 AND (tmpY * 32 + mapInfos.offsetY) < 768
+					DRAWSPRITE sprite[wall[tmpX][tmpY].id].id, wall[tmpX][tmpY].position.x + mapInfos.offsetX, wall[tmpX][tmpY].position.y + mapInfos.offsetY
+				ENDIF
 			ENDIF
 
 			IF mapEditor.active = TRUE
