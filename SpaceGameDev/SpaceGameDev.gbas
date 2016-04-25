@@ -91,8 +91,8 @@ TYPE anim_TYPE
 	stepTime
 ENDTYPE
 
-GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE, ground[] AS sprite_TYPE, wall[] AS sprite_TYPE, gui[] AS gui_TYPE, mapEditor AS mapEditor_TYPE
-GLOBAL font AS font_TYPE, sprite[] AS sprite_TYPE
+GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE, ground[] AS ground_TYPE, wall[] AS sprite_TYPE, gui[] AS gui_TYPE, mapEditor AS mapEditor_TYPE
+GLOBAL font AS font_TYPE, sprite[] AS sprite_TYPE, anim[] AS anim_TYPE
 
 
 
@@ -170,7 +170,6 @@ LOCAL ok, enumWert, tmp$, split$[], typ, openID, s AS sprite_TYPE
 
 				openID = GENSPRITE ()
 				LOADSPRITE split$[1], openID
-				DEBUG openID + " " + split$[1] + "\n"
 				s.id = openID
 				DIMPUSH sprite[], s
 
@@ -179,7 +178,6 @@ LOCAL ok, enumWert, tmp$, split$[], typ, openID, s AS sprite_TYPE
 
 				openID = GENSPRITE ()
 				LOADANIM split$[1], openID, 32, 32
-				DEBUG split$[1] + " "
 
 			ENDSELECT
 
@@ -340,7 +338,7 @@ LOCAL tmpX, tmpY
 
 	FOR tmpY = 0 TO mapInfos.sizeY - 1
 		FOR tmpX = 0 TO mapInfos.sizeX - 1
-			ground[tmpX][tmpY].id = 2
+			ground[tmpX][tmpY].spriteID = 2
 			ground[tmpX][tmpY].position.x = tmpX * 32
 			ground[tmpX][tmpY].position.y = tmpY * 32
 
@@ -367,7 +365,7 @@ FUNCTION drawGround:
 		FOR tmpX = 0 TO mapInfos.sizeX - 1
 			
 			IF (tmpX * 32 + mapInfos.offsetX) > -32 AND (tmpX * 32 + mapInfos.offsetX) < 768 AND (tmpY * 32 + mapInfos.offsetY) > -32 AND (tmpY * 32 + mapInfos.offsetY) < 768
-				DRAWSPRITE sprite[ground[tmpX][tmpY].id].id, ground[tmpX][tmpY].position.x + mapInfos.offsetX, ground[tmpX][tmpY].position.y + mapInfos.offsetY
+				DRAWSPRITE sprite[ground[tmpX][tmpY].spriteID].id, ground[tmpX][tmpY].position.x + mapInfos.offsetX, ground[tmpX][tmpY].position.y + mapInfos.offsetY
 			ENDIF
 			
 			IF wall[tmpX][tmpY].id > 0
