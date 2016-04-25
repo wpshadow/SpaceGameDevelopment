@@ -548,9 +548,9 @@ FUNCTION drawAnimation:
 		ENDIF
 		
 		
-		
-		DRAWANIM a.spriteID, a.currentStep, a.position.x + mapInfos.offsetX, a.position.y + mapInfos.offsetY
-		
+		IF  a.position.x + mapInfos.offsetX > -32 AND a.position.x + mapInfos.offsetX < 768 AND a.position.y + mapInfos.offsetY > -32 AND a.position.y + mapInfos.offsetY < 768
+			DRAWANIM a.spriteID, a.currentStep, a.position.x + mapInfos.offsetX, a.position.y + mapInfos.offsetY
+		ENDIF
 	NEXT
 
 ENDFUNCTION
