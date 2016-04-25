@@ -167,8 +167,6 @@ LOCAL ok, enumWert, tmp$, split$[], typ, openID, s AS sprite_TYPE
 
 			READLINE 0, tmp$
 			
-			DEBUG tmp$ + "\n"
-
 			SPLITSTR(tmp$, split$[], ";")
 
 			typ = split$[0]
@@ -551,7 +549,7 @@ FUNCTION drawAnimation:
 		
 		
 		
-		DRAWANIM a.spriteID, a.currentStep, a.position.x, a.position.y
+		DRAWANIM a.spriteID, a.currentStep, a.position.x + mapInfos.offsetX, a.position.y + mapInfos.offsetY
 		
 	NEXT
 
