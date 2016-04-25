@@ -35,16 +35,77 @@ TYPE system_mouse_TYPE
 	b2_press
 ENDTYPE
 
-GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE
+TYPE sprite_TYPE
+	id
+	position AS position_TYPE
+ENDTYPE
+
+TYPE ground_TYPE
+	spriteID
+	position AS position_TYPE
+ENDTYPE
+
+TYPE wall_TYPE
+	typID
+	spriteID
+	position AS position_TYPE
+ENDTYPE
+
+TYPE position_TYPE
+	x
+	y
+ENDTYPE
+
+TYPE size_TYPE
+	width
+	length
+ENDTYPE
+
+TYPE gui_TYPE
+
+	typ
+	button AS button_TYPE
+
+ENDTYPE
+
+TYPE button_TYPE
+	text$
+	returnID
+	position AS position_TYPE
+	size AS size_TYPE
+ENDTYPE
+
+TYPE mapEditor_TYPE
+	active
+ENDTYPE
+
+TYPE font_TYPE
+	sizeX
+	sizeY
+ENDTYPE
+
+TYPE anim_TYPE
+	spriteCounter
+	sprite[]
+	position AS position_TYPE
+	stepTime
+ENDTYPE
+
+GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE, ground[] AS sprite_TYPE, wall[] AS sprite_TYPE, gui[] AS gui_TYPE, mapEditor AS mapEditor_TYPE
+GLOBAL font AS font_TYPE, sprite[] AS sprite_TYPE
+
+
 
 main()
 
 
 FUNCTION main:
+LOCAL guiFeedback
 
 	init()
-	LOADSPRITE "media/rect.png", 0
-	LOADSPRITE "media/border.png", 1
+	loader()
+
+	generateLevel()
 
 	WHILE TRUE
 
@@ -52,9 +113,16 @@ FUNCTION main:
 		system_movement()
 
 		drawGround()
+		drawGrid()
 		drawMarker()
 
 		drawMenu()
+
+		guiFeedback = gui_update()
+
+		IF guiFeedback > 0
+			processFeedback(guiFeedback)
+		ENDIF
 
 		//drawCircle(100, 100, 200)
 
@@ -70,11 +138,76 @@ FUNCTION init:
 	AUTOPAUSE FALSE
 	SYSTEMPOINTER TRUE
 
-	mapInfos.sizeX = 28
+	mapInfos.sizeX = 32
 	mapInfos.sizeY = 32
 
-	options.cameraMovementSpeed = 0.1
+	options.cameraMovementSpeed = 0.15
 	options.cameraTurboSpeed = 0.25
+
+	gui_addButton("Test", 1, 778, 10, 236, 40)
+
+ENDFUNCTION
+
+FUNCTION loader:
+LOCAL ok, enumWert, tmp$, split$[], typ, openID, s AS sprite_TYPE
+
+	ok = DOESFILEEXIST("media/file.lst")
+
+	IF ok = TRUE
+
+		OPENFILE(0, "media/file.lst", 1)
+
+		WHILE ENDOFFILE(0) = FALSE
+
+			READLINE 0, tmp$
+
+			SPLITSTR(tmp$, split$[], ";")
+
+			typ = split$[0]
+
+			SELECT typ
+			CASE 0
+
+				openID = GENSPRITE ()
+				LOADSPRITE split$[1], openID
+				DEBUG openID + " " + split$[1] + "\n"
+				s.id = openID
+				DIMPUSH sprite[], s
+
+
+			CASE 1
+
+				openID = GENSPRITE ()
+				LOADANIM split$[1], openID, 32, 32
+				DEBUG split$[1] + " "
+
+			ENDSELECT
+
+
+
+
+
+
+			//LOADSPRITE "media/rect.png", 0
+			//LOADSPRITE "media/border.png", 1
+
+		WEND
+
+	ELSE
+		END
+	ENDIF
+
+	LOADFONT "media/font.png", 0
+	checkFont(0)
+	SETFONT 0
+
+
+ENDFUNCTION
+
+FUNCTION checkFont: id
+
+	SETFONT id
+	GETFONTSIZE font.sizeX, font.sizeY
 
 ENDFUNCTION
 
@@ -174,15 +307,89 @@ LOCAL tmpX, tmpY, phi
 
 ENDFUNCTION
 
-FUNCTION drawGround:
-LOCAL tmpX, tmpY
+FUNCTION drawGrid:
+LOCAL tmpX, tmpY, counter
 
 	FOR tmpY = 0 TO mapInfos.sizeY - 1
 		FOR tmpX = 0 TO mapInfos.sizeX - 1
-			DRAWSPRITE 0, tmpX * 32 + mapInfos.offsetX, tmpY * 32 + mapInfos.offsetY
 
-			IF mouse.x >= tmpX * 32 + mapInfos.offsetX AND mouse.x <= tmpX * 32 + mapInfos.offsetX + 32 AND mouse.y >= tmpY * 32 + mapInfos.offsetY AND mouse.y <= tmpY * 32 + mapInfos.offsetY + 32
+
+			IF (tmpX * 32 + mapInfos.offsetX) > -32 AND (tmpX * 32 + mapInfos.offsetX) < 768 AND (tmpY * 32 + mapInfos.offsetY) > -32 AND (tmpY * 32 + mapInfos.offsetY) < 768
+
+				DRAWSPRITE sprite[0].id, tmpX * 32 + mapInfos.offsetX, tmpY * 32 + mapInfos.offsetY
+
+				INC counter, 1
+
+			ENDIF
+
+
+			IF mouse.x >= tmpX * 32 + mapInfos.offsetX AND mouse.x <= tmpX * 32 + mapInfos.offsetX + 32 AND mouse.y >= tmpY * 32 + mapInfos.offsetY AND mouse.y <= tmpY * 32 + mapInfos.offsetY + 32 AND mouse.x < 768
 				setMarker(tmpX * 32 + mapInfos.offsetX, tmpY * 32 + mapInfos.offsetY)
+			ENDIF
+
+		NEXT
+	NEXT
+
+ENDFUNCTION
+
+FUNCTION generateLevel:
+LOCAL tmpX, tmpY
+
+	DIM ground[mapInfos.sizeX][mapInfos.sizeY]
+	DIM wall[mapInfos.sizeX][mapInfos.sizeY]
+
+	FOR tmpY = 0 TO mapInfos.sizeY - 1
+		FOR tmpX = 0 TO mapInfos.sizeX - 1
+			ground[tmpX][tmpY].id = 2
+			ground[tmpX][tmpY].position.x = tmpX * 32
+			ground[tmpX][tmpY].position.y = tmpY * 32
+
+			IF tmpX = 0 OR tmpX = mapInfos.sizeX - 1 OR tmpY = 0 OR tmpY = mapInfos.sizeY - 1
+				wall[tmpX][tmpY].id = 3
+				wall[tmpX][tmpY].position.x = tmpX * 32
+				wall[tmpX][tmpY].position.y = tmpY * 32
+			ELSE
+				wall[tmpX][tmpY].id = 4
+				wall[tmpX][tmpY].position.x = tmpX * 32
+				wall[tmpX][tmpY].position.y = tmpY * 32
+			ENDIF
+
+		NEXT
+	NEXT
+
+ENDFUNCTION
+
+
+
+FUNCTION drawGround:
+
+	FOR tmpY = 0 TO mapInfos.sizeY - 1
+		FOR tmpX = 0 TO mapInfos.sizeX - 1
+			
+			IF (tmpX * 32 + mapInfos.offsetX) > -32 AND (tmpX * 32 + mapInfos.offsetX) < 768 AND (tmpY * 32 + mapInfos.offsetY) > -32 AND (tmpY * 32 + mapInfos.offsetY) < 768
+				DRAWSPRITE sprite[ground[tmpX][tmpY].id].id, ground[tmpX][tmpY].position.x + mapInfos.offsetX, ground[tmpX][tmpY].position.y + mapInfos.offsetY
+			ENDIF
+			
+			IF wall[tmpX][tmpY].id > 0
+				IF (tmpX * 32 + mapInfos.offsetX) > -32 AND (tmpX * 32 + mapInfos.offsetX) < 768 AND (tmpY * 32 + mapInfos.offsetY) > -32 AND (tmpY * 32 + mapInfos.offsetY) < 768
+					DRAWSPRITE sprite[wall[tmpX][tmpY].id].id, wall[tmpX][tmpY].position.x + mapInfos.offsetX, wall[tmpX][tmpY].position.y + mapInfos.offsetY
+				ENDIF
+			ENDIF
+
+			IF mapEditor.active = TRUE
+				IF mouse.x >= tmpX * 32 + mapInfos.offsetX AND mouse.x <= tmpX * 32 + mapInfos.offsetX + 32 AND mouse.y >= tmpY * 32 + mapInfos.offsetY AND mouse.y <= tmpY * 32 + mapInfos.offsetY + 32 AND mouse.x < 768
+					IF mouse.b1 = 1 OR mouse.b1_press = 1
+						IF wall[tmpX][tmpY].id = 4
+							wall[tmpX][tmpY].id = 0
+						ENDIF
+					ENDIF
+
+					IF mouse.b2 = 1 OR mouse.b2_press
+						IF wall[tmpX][tmpY].id = 0
+							wall[tmpX][tmpY].id = 4
+						ENDIF
+					ENDIF
+				ENDIF
 			ENDIF
 
 		NEXT
@@ -199,12 +406,101 @@ ENDFUNCTION
 
 FUNCTION drawMarker:
 	IF mouse.x < 768
-		DRAWSPRITE 1, mapInfos.markerX, mapInfos.markerY
+		DRAWSPRITE sprite[1].id, mapInfos.markerX, mapInfos.markerY
 	ENDIF
 ENDFUNCTION
 
 FUNCTION drawMenu:
 
-	DRAWRECT 768, 0, 256, 768, RGB(32, 32, 32)
+	STARTPOLY
+		POLYVECTOR 768, 0, 0, 0, RGB(32, 32, 32)
+		POLYVECTOR 768, 768, 0, 0, RGB(32, 32, 32)
+		POLYVECTOR 1024, 768, 0, 0, RGB(0, 0, 0)
+		POLYVECTOR 1024, 0, 0, 0, RGB(0, 0, 0)
+	ENDPOLY
 
+
+	//DRAWRECT 768, 0, 256, 768, RGB(32, 32, 32)
+
+ENDFUNCTION
+
+FUNCTION gui_addButton: text$, returnID, x, y, length, width
+LOCAL g AS gui_TYPE
+
+	IF x >= 768
+
+		g.typ = 1
+		g.button.text$ = text$
+		g.button.returnID = returnID
+		g.button.position.x = x
+		g.button.position.y = y
+		g.button.size.length = length
+		g.button.size.width = width
+		DIMPUSH gui[], g
+
+	ENDIF
+
+ENDFUNCTION
+
+FUNCTION gui_update:
+LOCAL buttonColorR, buttonColorG, buttonColorB, returnID
+
+	IF LEN(gui[]) > 0
+		FOREACH g IN gui[]
+			SELECT g.typ
+			CASE 1
+				IF mouse.x > g.button.position.x AND mouse.x <= g.button.position.x + g.button.size.length AND mouse.y > g.button.position.y AND mouse.y <= g.button.position.y + g.button.size.width
+					IF mouse.b1_press
+						buttonColorR = 0
+						buttonColorG = 96
+						buttonColorB = 160
+					ELSE
+
+						buttonColorR = 0
+						buttonColorG = 64
+						buttonColorB = 128
+					ENDIF
+				ELSE
+					buttonColorR = 0
+					buttonColorG = 32
+					buttonColorB = 96
+				ENDIF
+
+				DRAWRECT g.button.position.x, g.button.position.y, g.button.size.length, g.button.size.width, RGB(buttonColorR, buttonColorG, buttonColorB)
+				gui_printCentralPosition(g.button.text$, g.button.position.x, g.button.position.y, g.button.size.length, g.button.size.width)
+
+				IF mouse.b1 = TRUE AND mouse.x > g.button.position.x AND mouse.x <= g.button.position.x + g.button.size.length AND mouse.y > g.button.position.y AND mouse.y <= g.button.position.y + g.button.size.width
+					returnID = g.button.returnID
+				ENDIF
+
+			ENDSELECT
+		NEXT
+	ENDIF
+
+	IF returnID > 0
+		RETURN returnID
+	ENDIF
+
+ENDFUNCTION
+
+FUNCTION gui_RESET:
+
+	FOREACH g IN gui[]
+		DELETE g
+	NEXT
+
+ENDFUNCTION
+
+FUNCTION gui_printCentralPosition: text$, x, y, length, width
+LOCAL posX, posY
+
+	posX = x + ((length - (LEN(text$) * font.sizeX)) / 2)
+	posY = y + (width - font.sizeY) / 2
+
+	PRINT text$, posX, posY
+
+ENDFUNCTION
+
+FUNCTION processFeedback: guiFeedback
+	IF guiFeedback = 1 THEN gui_RESET()
 ENDFUNCTION
