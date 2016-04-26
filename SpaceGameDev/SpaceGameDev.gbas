@@ -102,8 +102,14 @@ TYPE windows_TYPE
 	Generated
 ENDTYPE
 
+TYPE version_TYPE
+	text$[999]
+	lines
+	offsetY	
+ENDTYPE
+
 GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE, ground[] AS ground_TYPE, wall[] AS wall_TYPE, gui[] AS gui_TYPE, mapEditor AS mapEditor_TYPE
-GLOBAL font AS font_TYPE, sprite[] AS sprite_TYPE, anim[] AS anim_TYPE, windows AS windows_TYPE
+GLOBAL font AS font_TYPE, sprite[] AS sprite_TYPE, anim[] AS anim_TYPE, windows AS windows_TYPE, version AS version_TYPE
 
 
 
@@ -141,6 +147,7 @@ LOCAL guiFeedback
 
 		//drawCircle(100, 100, 200)
 
+		//PRINT windows.activeWindow, 0, 0
 
 
 		SHOWSCREEN
@@ -162,7 +169,7 @@ FUNCTION init:
 ENDFUNCTION
 
 FUNCTION loader:
-LOCAL ok, enumWert, tmp$, split$[], typ, openID, s AS sprite_TYPE
+LOCAL ok, enumWert, tmp$, split$[], typ, openID, s AS sprite_TYPE, v AS version_TYPE, line
 
 	ok = DOESFILEEXIST("media/file.lst")
 
@@ -213,6 +220,22 @@ LOCAL ok, enumWert, tmp$, split$[], typ, openID, s AS sprite_TYPE
 	LOADFONT "media/font.png", 0
 	checkFont(0)
 	SETFONT 0
+	
+	ok = DOESFILEEXIST("media/versionsinfo.txt")
+	
+	IF ok = TRUE
+		OPENFILE(0, "media/versionsinfo.txt", 1)
+			WHILE ENDOFFILE(0) = FALSE
+				READLINE 0, version.text$[line]
+				INC line, 1
+			WEND
+		CLOSEFILE 0
+		
+		version.lines = line
+	ELSE
+		version.text$[0] = "NO DATA FOUND"
+		version.lines = 1
+	ENDIF
 
 
 ENDFUNCTION
@@ -275,7 +298,7 @@ LOCAL turbo
 		turbo = 0
 	ENDIF
 
-	PRINT turbo, 0, 0
+	//PRINT turbo, 0, 0
 
 	IF mapInfos.sizeX * 32 > 768
 		// Taste A
@@ -536,11 +559,26 @@ FUNCTION processFeedback: guiFeedback
 	SELECT windows.activeWindow
 	CASE 0
 		IF guiFeedback = 1
+			//gui_RESET()
+		ENDIF
+		
+		IF guiFeedback = 4
+			windows.activeWindow = 1
 			gui_RESET()
 			windows.Generated = FALSE
 		ENDIF
+		
+		
 		IF guiFeedback = 5 THEN END
 	CASE 1
+		IF guiFeedback = 1 THEN INC version.offsetY, 1
+		IF guiFeedback = 2 THEN DEC version.offsetY, 1
+	
+		IF guiFeedback = 5
+			windows.activeWindow = 0
+			gui_RESET()
+			windows.Generated = FALSE
+		ENDIF
 	ENDSELECT
 	
 
@@ -621,11 +659,23 @@ STATIC offsetX, offsetY, tmpX, tmpY
 		ENDPOLY
 		
 		DRAWSPRITE sprite[5].id, offsetX, offsetY
+	// VERSIONSINFO
 	CASE 1
 		IF windows.Generated = FALSE
-
+			gui_addButton("Text Rauf", 1, 778, 10, 236, 40)
+			gui_addButton("Text Runter", 2, 778, 80, 236, 40)
+			gui_addButton("Zurück", 5, 778, 718, 236, 40)
+			
 			windows.Generated = TRUE
 		ENDIF
+
+		FOR tmp = 0 TO version.lines - 1
+			IF (tmp * 10) + (version.offsetY * 10) < 760 AND (tmp * 10) + (version.offsetY * 10) >= 0
+				PRINT version.text$[tmp], 0, 0 + (tmp * 10) + (version.offsetY * 10)
+			ENDIF
+		NEXT
+
+
 	ENDSELECT
 	
 
