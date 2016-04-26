@@ -48,6 +48,8 @@ ENDTYPE
 TYPE wall_TYPE
 	typID
 	spriteID
+	life
+	lifeMax
 	position AS position_TYPE
 ENDTYPE
 
@@ -85,14 +87,18 @@ TYPE font_TYPE
 ENDTYPE
 
 TYPE anim_TYPE
+	name$
 	spriteCounter
-	sprite[]
+	spriteSteps
+	spriteID
 	position AS position_TYPE
 	stepTime
+	stepTimeOld
+	currentStep
 ENDTYPE
 
-GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE, ground[] AS sprite_TYPE, wall[] AS sprite_TYPE, gui[] AS gui_TYPE, mapEditor AS mapEditor_TYPE
-GLOBAL font AS font_TYPE, sprite[] AS sprite_TYPE
+GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE, ground[] AS ground_TYPE, wall[] AS wall_TYPE, gui[] AS gui_TYPE, mapEditor AS mapEditor_TYPE
+GLOBAL font AS font_TYPE, sprite[] AS sprite_TYPE, anim[] AS anim_TYPE
 
 
 
@@ -104,8 +110,11 @@ LOCAL guiFeedback
 
 	init()
 	loader()
+	setAnimPosition("enemyGate", 32, 32)
 
 	generateLevel()
+	
+	wall[5][5].life = 50
 
 	WHILE TRUE
 
@@ -113,6 +122,7 @@ LOCAL guiFeedback
 		system_movement()
 
 		drawGround()
+		drawAnimation()
 		drawGrid()
 		drawMarker()
 
@@ -170,7 +180,6 @@ LOCAL ok, enumWert, tmp$, split$[], typ, openID, s AS sprite_TYPE
 
 				openID = GENSPRITE ()
 				LOADSPRITE split$[1], openID
-				DEBUG openID + " " + split$[1] + "\n"
 				s.id = openID
 				DIMPUSH sprite[], s
 
@@ -179,7 +188,8 @@ LOCAL ok, enumWert, tmp$, split$[], typ, openID, s AS sprite_TYPE
 
 				openID = GENSPRITE ()
 				LOADANIM split$[1], openID, 32, 32
-				DEBUG split$[1] + " "
+				addAnimation(openID, split$[4], split$[2], split$[3])
+
 
 			ENDSELECT
 
@@ -340,18 +350,20 @@ LOCAL tmpX, tmpY
 
 	FOR tmpY = 0 TO mapInfos.sizeY - 1
 		FOR tmpX = 0 TO mapInfos.sizeX - 1
-			ground[tmpX][tmpY].id = 2
+			ground[tmpX][tmpY].spriteID = 2
 			ground[tmpX][tmpY].position.x = tmpX * 32
 			ground[tmpX][tmpY].position.y = tmpY * 32
 
 			IF tmpX = 0 OR tmpX = mapInfos.sizeX - 1 OR tmpY = 0 OR tmpY = mapInfos.sizeY - 1
-				wall[tmpX][tmpY].id = 3
+				wall[tmpX][tmpY].spriteID = 3
 				wall[tmpX][tmpY].position.x = tmpX * 32
 				wall[tmpX][tmpY].position.y = tmpY * 32
 			ELSE
-				wall[tmpX][tmpY].id = 4
+				wall[tmpX][tmpY].spriteID = 4
 				wall[tmpX][tmpY].position.x = tmpX * 32
 				wall[tmpX][tmpY].position.y = tmpY * 32
+				wall[tmpX][tmpY].life = 100
+				wall[tmpX][tmpY].lifeMax = 100
 			ENDIF
 
 		NEXT
@@ -365,28 +377,33 @@ FUNCTION drawGround:
 
 	FOR tmpY = 0 TO mapInfos.sizeY - 1
 		FOR tmpX = 0 TO mapInfos.sizeX - 1
-			
+
 			IF (tmpX * 32 + mapInfos.offsetX) > -32 AND (tmpX * 32 + mapInfos.offsetX) < 768 AND (tmpY * 32 + mapInfos.offsetY) > -32 AND (tmpY * 32 + mapInfos.offsetY) < 768
-				DRAWSPRITE sprite[ground[tmpX][tmpY].id].id, ground[tmpX][tmpY].position.x + mapInfos.offsetX, ground[tmpX][tmpY].position.y + mapInfos.offsetY
+				DRAWSPRITE sprite[ground[tmpX][tmpY].spriteID].id, ground[tmpX][tmpY].position.x + mapInfos.offsetX, ground[tmpX][tmpY].position.y + mapInfos.offsetY
 			ENDIF
-			
-			IF wall[tmpX][tmpY].id > 0
+
+			IF wall[tmpX][tmpY].spriteID > 0
 				IF (tmpX * 32 + mapInfos.offsetX) > -32 AND (tmpX * 32 + mapInfos.offsetX) < 768 AND (tmpY * 32 + mapInfos.offsetY) > -32 AND (tmpY * 32 + mapInfos.offsetY) < 768
-					DRAWSPRITE sprite[wall[tmpX][tmpY].id].id, wall[tmpX][tmpY].position.x + mapInfos.offsetX, wall[tmpX][tmpY].position.y + mapInfos.offsetY
+					DRAWSPRITE sprite[wall[tmpX][tmpY].spriteID].id, wall[tmpX][tmpY].position.x + mapInfos.offsetX, wall[tmpX][tmpY].position.y + mapInfos.offsetY
+					IF wall[tmpX][tmpY].spriteID = 4
+						IF wall[tmpX][tmpY].life < wall[tmpX][tmpY].lifeMax
+							gui_drawWallBar(wall[tmpX][tmpY].life, wall[tmpX][tmpY].lifeMax, wall[tmpX][tmpY].position.x + mapInfos.offsetX, wall[tmpX][tmpY].position.y + mapInfos.offsetY)
+						ENDIF
+					ENDIF
 				ENDIF
 			ENDIF
 
 			IF mapEditor.active = TRUE
 				IF mouse.x >= tmpX * 32 + mapInfos.offsetX AND mouse.x <= tmpX * 32 + mapInfos.offsetX + 32 AND mouse.y >= tmpY * 32 + mapInfos.offsetY AND mouse.y <= tmpY * 32 + mapInfos.offsetY + 32 AND mouse.x < 768
 					IF mouse.b1 = 1 OR mouse.b1_press = 1
-						IF wall[tmpX][tmpY].id = 4
-							wall[tmpX][tmpY].id = 0
+						IF wall[tmpX][tmpY].spriteID = 4
+							wall[tmpX][tmpY].spriteID = 0
 						ENDIF
 					ENDIF
 
 					IF mouse.b2 = 1 OR mouse.b2_press
-						IF wall[tmpX][tmpY].id = 0
-							wall[tmpX][tmpY].id = 4
+						IF wall[tmpX][tmpY].spriteID = 0
+							wall[tmpX][tmpY].spriteID = 4
 						ENDIF
 					ENDIF
 				ENDIF
@@ -501,6 +518,60 @@ LOCAL posX, posY
 
 ENDFUNCTION
 
+FUNCTION gui_drawWallBar: life, lifeMax, x, y
+LOCAL prozent
+
+	prozent = life / lifeMax
+	
+	DRAWRECT x, y + 4, 32, 4, RGB(255, 255, 255)
+	DRAWRECT x + 1, y + 5, 30 * prozent, 2, RGB(255, 0, 0) 
+	
+ENDFUNCTION
+
 FUNCTION processFeedback: guiFeedback
 	IF guiFeedback = 1 THEN gui_RESET()
+ENDFUNCTION
+
+FUNCTION addAnimation: spriteID, name$, stepTime, spriteSteps
+LOCAL a AS anim_TYPE
+
+	a.spriteID = spriteID
+	a.name$ = name$
+	a.stepTime = stepTime
+	a.spriteSteps = spriteSteps
+
+	DIMPUSH anim[], a
+
+ENDFUNCTION
+
+FUNCTION setAnimPosition: name$, posX, posY
+
+	FOREACH a IN anim[]
+		IF name$ = a.name$
+			a.position.x = posX
+			a.position.y = posY
+			BREAK
+		ENDIF
+	NEXT
+
+ENDFUNCTION
+
+FUNCTION drawAnimation:
+
+	FOREACH a IN anim[]
+
+		IF a.stepTimeOld < GETTIMERALL()
+			INC a.currentStep, 1
+			IF a.currentStep > a.spriteSteps - 1
+				a.currentStep = 0
+			ENDIF
+			a.stepTimeOld = GETTIMERALL() + a.stepTime
+		ENDIF
+
+
+		IF  a.position.x + mapInfos.offsetX > -32 AND a.position.x + mapInfos.offsetX < 768 AND a.position.y + mapInfos.offsetY > -32 AND a.position.y + mapInfos.offsetY < 768
+			DRAWANIM a.spriteID, a.currentStep, a.position.x + mapInfos.offsetX, a.position.y + mapInfos.offsetY
+		ENDIF
+	NEXT
+
 ENDFUNCTION
