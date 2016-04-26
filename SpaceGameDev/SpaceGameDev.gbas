@@ -97,8 +97,13 @@ TYPE anim_TYPE
 	currentStep
 ENDTYPE
 
+TYPE windows_TYPE
+	activeWindow
+	Generated
+ENDTYPE
+
 GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE, ground[] AS ground_TYPE, wall[] AS wall_TYPE, gui[] AS gui_TYPE, mapEditor AS mapEditor_TYPE
-GLOBAL font AS font_TYPE, sprite[] AS sprite_TYPE, anim[] AS anim_TYPE
+GLOBAL font AS font_TYPE, sprite[] AS sprite_TYPE, anim[] AS anim_TYPE, windows AS windows_TYPE
 
 
 
@@ -113,18 +118,18 @@ LOCAL guiFeedback
 	setAnimPosition("enemyGate", 32, 32)
 
 	generateLevel()
-	
-	wall[5][5].life = 50
 
 	WHILE TRUE
 
 		system_mouse()
 		system_movement()
 
-		drawGround()
-		drawAnimation()
-		drawGrid()
-		drawMarker()
+		drawWindows()
+
+		//drawGround()
+		//drawAnimation()
+		//drawGrid()
+		//drawMarker()
 
 		drawMenu()
 
@@ -153,8 +158,6 @@ FUNCTION init:
 
 	options.cameraMovementSpeed = 0.15
 	options.cameraTurboSpeed = 0.25
-
-	gui_addButton("Test", 1, 778, 10, 236, 40)
 
 ENDFUNCTION
 
@@ -522,14 +525,26 @@ FUNCTION gui_drawWallBar: life, lifeMax, x, y
 LOCAL prozent
 
 	prozent = life / lifeMax
-	
+
 	DRAWRECT x, y + 4, 32, 4, RGB(255, 255, 255)
-	DRAWRECT x + 1, y + 5, 30 * prozent, 2, RGB(255, 0, 0) 
-	
+	DRAWRECT x + 1, y + 5, 30 * prozent, 2, RGB(255, 0, 0)
+
 ENDFUNCTION
 
 FUNCTION processFeedback: guiFeedback
-	IF guiFeedback = 1 THEN gui_RESET()
+
+	SELECT windows.activeWindow
+	CASE 0
+		IF guiFeedback = 1
+			gui_RESET()
+			windows.Generated = FALSE
+		ENDIF
+		IF guiFeedback = 5 THEN END
+	CASE 1
+	ENDSELECT
+	
+
+
 ENDFUNCTION
 
 FUNCTION addAnimation: spriteID, name$, stepTime, spriteSteps
@@ -573,5 +588,45 @@ FUNCTION drawAnimation:
 			DRAWANIM a.spriteID, a.currentStep, a.position.x + mapInfos.offsetX, a.position.y + mapInfos.offsetY
 		ENDIF
 	NEXT
+
+ENDFUNCTION
+
+FUNCTION drawWindows:
+STATIC offsetX, offsetY, tmpX, tmpY
+	
+	
+
+	SELECT windows.activeWindow
+	// STARTBILDSCHIRM
+	CASE 0
+		IF windows.Generated = FALSE
+			GETSPRITESIZE sprite[5].id, tmpX, tmpY
+			
+			offsetX = (768 - tmpX) / 2
+			offsetY = (768 - tmpY) / 2
+			
+			gui_addButton("Neue Kampagne", 1, 778, 10, 236, 40)
+			gui_addButton("Neues Spiel", 2, 778, 80, 236, 40)
+			gui_addButton("Optionen", 3, 778, 150, 236, 40)
+			gui_addButton("Versionsinfo", 4, 778, 648, 236, 40)
+			gui_addButton("Beenden", 5, 778, 718, 236, 40)
+			windows.Generated = TRUE
+		ENDIF
+		
+		STARTPOLY
+			POLYVECTOR 0, 0, 0, 0, RGB(64, 64, 64)
+			POLYVECTOR 0, 768, 0, 0, RGB(0, 0, 0)
+			POLYVECTOR 768, 768, 0, 0, RGB(0, 0, 0)
+			POLYVECTOR 768, 0, 0, 0, RGB(64, 64, 64)
+		ENDPOLY
+		
+		DRAWSPRITE sprite[5].id, offsetX, offsetY
+	CASE 1
+		IF windows.Generated = FALSE
+
+			windows.Generated = TRUE
+		ENDIF
+	ENDSELECT
+	
 
 ENDFUNCTION
