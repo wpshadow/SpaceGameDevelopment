@@ -105,7 +105,7 @@ ENDTYPE
 TYPE version_TYPE
 	text$[999]
 	lines
-	offsetY	
+	offsetY
 ENDTYPE
 
 GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE, ground[] AS ground_TYPE, wall[] AS wall_TYPE, gui[] AS gui_TYPE, mapEditor AS mapEditor_TYPE
@@ -137,7 +137,7 @@ LOCAL guiFeedback
 		//drawGrid()
 		//drawMarker()
 
-		drawMenu()
+
 
 		guiFeedback = gui_update()
 
@@ -220,9 +220,9 @@ LOCAL ok, enumWert, tmp$, split$[], typ, openID, s AS sprite_TYPE, v AS version_
 	LOADFONT "media/font.png", 0
 	checkFont(0)
 	SETFONT 0
-	
+
 	ok = DOESFILEEXIST("media/versionsinfo.txt")
-	
+
 	IF ok = TRUE
 		OPENFILE(0, "media/versionsinfo.txt", 1)
 			WHILE ENDOFFILE(0) = FALSE
@@ -230,7 +230,7 @@ LOCAL ok, enumWert, tmp$, split$[], typ, openID, s AS sprite_TYPE, v AS version_
 				INC line, 1
 			WEND
 		CLOSEFILE 0
-		
+
 		version.lines = line
 	ELSE
 		version.text$[0] = "NO DATA FOUND"
@@ -561,26 +561,43 @@ FUNCTION processFeedback: guiFeedback
 		IF guiFeedback = 1
 			//gui_RESET()
 		ENDIF
-		
+
+		IF guiFeedback = 3
+			windows.activeWindow = 2
+			gui_RESET()
+			windows.Generated = FALSE
+		ENDIF
+	
 		IF guiFeedback = 4
 			windows.activeWindow = 1
 			gui_RESET()
 			windows.Generated = FALSE
 		ENDIF
-		
-		
+
+
 		IF guiFeedback = 5 THEN END
 	CASE 1
-		IF guiFeedback = 1 THEN INC version.offsetY, 1
-		IF guiFeedback = 2 THEN DEC version.offsetY, 1
+		IF guiFeedback = 1 THEN version.offsetY = 0
+		IF guiFeedback = 2 THEN INC version.offsetY, 1
+		IF guiFeedback = 3 THEN DEC version.offsetY, 1
+		IF guiFeedback = 4 THEN DEC version.offsetY, 10
+
+		IF guiFeedback = 5
+			windows.activeWindow = 0
+			gui_RESET()
+			windows.Generated = FALSE
+		ENDIF
+		
+	CASE 2
 	
 		IF guiFeedback = 5
 			windows.activeWindow = 0
 			gui_RESET()
 			windows.Generated = FALSE
 		ENDIF
-	ENDSELECT
 	
+	ENDSELECT
+
 
 
 ENDFUNCTION
@@ -631,18 +648,18 @@ ENDFUNCTION
 
 FUNCTION drawWindows:
 STATIC offsetX, offsetY, tmpX, tmpY
-	
-	
+LOCAL mouseLeft, mouseRight, mouseLeftPercent
+
 
 	SELECT windows.activeWindow
 	// STARTBILDSCHIRM
 	CASE 0
 		IF windows.Generated = FALSE
 			GETSPRITESIZE sprite[5].id, tmpX, tmpY
-			
+
 			offsetX = (768 - tmpX) / 2
 			offsetY = (768 - tmpY) / 2
-			
+
 			gui_addButton("Neue Kampagne", 1, 778, 10, 236, 40)
 			gui_addButton("Neues Spiel", 2, 778, 80, 236, 40)
 			gui_addButton("Optionen", 3, 778, 150, 236, 40)
@@ -651,32 +668,65 @@ STATIC offsetX, offsetY, tmpX, tmpY
 			windows.Generated = TRUE
 		ENDIF
 		
+		drawMenu()
+	
+		mouseLeft = 64 * (1 - (mouse.x / 768))
+		IF mouseLeft < 0 THEN mouseLeft = 0
+		mouseRight = 64 * (mouse.x / 768)
+		IF mouseRight > 64 THEN mouseRight = 64
+
+		
+
 		STARTPOLY
-			POLYVECTOR 0, 0, 0, 0, RGB(64, 64, 64)
+			POLYVECTOR 0, 0, 0, 0, RGB(64 + mouseLeft, 64 + mouseLeft, 64 + mouseLeft)
 			POLYVECTOR 0, 768, 0, 0, RGB(0, 0, 0)
 			POLYVECTOR 768, 768, 0, 0, RGB(0, 0, 0)
-			POLYVECTOR 768, 0, 0, 0, RGB(64, 64, 64)
+			POLYVECTOR 768, 0, 0, 0, RGB(64 + mouseRight, 64 + mouseRight, 64 + mouseRight)
 		ENDPOLY
-		
+
 		DRAWSPRITE sprite[5].id, offsetX, offsetY
 	// VERSIONSINFO
 	CASE 1
 		IF windows.Generated = FALSE
-			gui_addButton("Text Rauf", 1, 778, 10, 236, 40)
-			gui_addButton("Text Runter", 2, 778, 80, 236, 40)
+			gui_addButton("Anfang", 1, 778, 10, 236, 40)
+			gui_addButton("Hinauf", 2, 778, 80, 236, 40)
+			gui_addButton("Hinunter", 3, 778, 150, 236, 40)
+			gui_addButton("+10 Hinunter", 4, 778, 220, 236, 40)
 			gui_addButton("Zurück", 5, 778, 718, 236, 40)
-			
+
 			windows.Generated = TRUE
 		ENDIF
+
+		drawMenu()
 
 		FOR tmp = 0 TO version.lines - 1
 			IF (tmp * 10) + (version.offsetY * 10) < 760 AND (tmp * 10) + (version.offsetY * 10) >= 0
 				PRINT version.text$[tmp], 0, 0 + (tmp * 10) + (version.offsetY * 10)
 			ENDIF
 		NEXT
+	// OPTIONS
+	CASE 2
+		IF windows.Generated = FALSE
+			//gui_addButton("Anfang", 1, 778, 10, 236, 40)
+			//gui_addButton("Hinauf", 2, 778, 80, 236, 40)
+			//gui_addButton("Hinunter", 3, 778, 150, 236, 40)
+			//gui_addButton("+10 Hinunter", 4, 778, 220, 236, 40)
+			//gui_addButton("Zurück", 5, 778, 718, 236, 40)
 
+			windows.Generated = TRUE
+		ENDIF
+		
+		drawMenu()
+		
+		STARTPOLY
+			POLYVECTOR 768, 0, 0, 0, RGB(0, 64, 128)
+			POLYVECTOR 768, 32, 0, 0, RGB(0, 32, 64)
+			POLYVECTOR 1024, 32, 0, 0, RGB(0, 32, 64)
+			POLYVECTOR 1024, 0, 0, 0, RGB(0, 64, 128)
+		ENDPOLY
+		DRAWSPRITE sprite[6].id, 880, 0
 
 	ENDSELECT
-	
+
 
 ENDFUNCTION
