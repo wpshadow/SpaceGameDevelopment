@@ -108,8 +108,13 @@ TYPE version_TYPE
 	offsetY
 ENDTYPE
 
+TYPE color_TYPE
+
+ENDTYPE
+
+
 GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE, ground[] AS ground_TYPE, wall[] AS wall_TYPE, gui[] AS gui_TYPE, mapEditor AS mapEditor_TYPE
-GLOBAL font AS font_TYPE, sprite[] AS sprite_TYPE, anim[] AS anim_TYPE, windows AS windows_TYPE, version AS version_TYPE
+GLOBAL font AS font_TYPE, sprite[] AS sprite_TYPE, anim[] AS anim_TYPE, windows AS windows_TYPE, version AS version_TYPE, color AS color_TYPE
 
 
 
@@ -563,15 +568,11 @@ FUNCTION processFeedback: guiFeedback
 		ENDIF
 
 		IF guiFeedback = 3
-			windows.activeWindow = 2
-			gui_RESET()
-			windows.Generated = FALSE
+			changeWindow(2)
 		ENDIF
 	
 		IF guiFeedback = 4
-			windows.activeWindow = 1
-			gui_RESET()
-			windows.Generated = FALSE
+			changeWindow(1)
 		ENDIF
 
 
@@ -583,22 +584,26 @@ FUNCTION processFeedback: guiFeedback
 		IF guiFeedback = 4 THEN DEC version.offsetY, 10
 
 		IF guiFeedback = 5
-			windows.activeWindow = 0
-			gui_RESET()
-			windows.Generated = FALSE
+			changeWindow(0)
 		ENDIF
 		
 	CASE 2
 	
 		IF guiFeedback = 5
-			windows.activeWindow = 0
-			gui_RESET()
-			windows.Generated = FALSE
+			changeWindow(0)
 		ENDIF
 	
 	ENDSELECT
 
 
+
+ENDFUNCTION
+
+FUNCTION changeWindow: id
+
+			windows.activeWindow = id
+			gui_RESET()
+			windows.Generated = FALSE
 
 ENDFUNCTION
 
@@ -688,16 +693,19 @@ LOCAL mouseLeft, mouseRight, mouseLeftPercent
 	// VERSIONSINFO
 	CASE 1
 		IF windows.Generated = FALSE
-			gui_addButton("Anfang", 1, 778, 10, 236, 40)
-			gui_addButton("Hinauf", 2, 778, 80, 236, 40)
-			gui_addButton("Hinunter", 3, 778, 150, 236, 40)
-			gui_addButton("+10 Hinunter", 4, 778, 220, 236, 40)
+//			gui_addButton("Anfang", 1, 778, 10, 236, 40)
+//			gui_addButton("Hinauf", 2, 778, 80, 236, 40)
+//			gui_addButton("Hinunter", 3, 778, 150, 236, 40)
+//			gui_addButton("+10 Hinunter", 4, 778, 220, 236, 40)
 			gui_addButton("Zurück", 5, 778, 718, 236, 40)
 
 			windows.Generated = TRUE
 		ENDIF
 
-		drawMenu()
+		drawWindowMenuWithSymbol(7)
+		
+
+
 
 		FOR tmp = 0 TO version.lines - 1
 			IF (tmp * 10) + (version.offsetY * 10) < 760 AND (tmp * 10) + (version.offsetY * 10) >= 0
@@ -711,22 +719,29 @@ LOCAL mouseLeft, mouseRight, mouseLeftPercent
 			//gui_addButton("Hinauf", 2, 778, 80, 236, 40)
 			//gui_addButton("Hinunter", 3, 778, 150, 236, 40)
 			//gui_addButton("+10 Hinunter", 4, 778, 220, 236, 40)
-			//gui_addButton("Zurück", 5, 778, 718, 236, 40)
+			gui_addButton("Zurück", 5, 778, 718, 236, 40)
 
 			windows.Generated = TRUE
 		ENDIF
 		
-		drawMenu()
-		
-		STARTPOLY
-			POLYVECTOR 768, 0, 0, 0, RGB(0, 64, 128)
-			POLYVECTOR 768, 32, 0, 0, RGB(0, 32, 64)
-			POLYVECTOR 1024, 32, 0, 0, RGB(0, 32, 64)
-			POLYVECTOR 1024, 0, 0, 0, RGB(0, 64, 128)
-		ENDPOLY
-		DRAWSPRITE sprite[6].id, 880, 0
+		drawWindowMenuWithSymbol(6)
 
 	ENDSELECT
 
+
+ENDFUNCTION
+
+FUNCTION drawWindowMenuWithSymbol: symbolID
+
+	drawMenu()
+		
+	STARTPOLY
+		POLYVECTOR 768, 0, 0, 0, RGB(0, 64, 128)
+		POLYVECTOR 768, 32, 0, 0, RGB(0, 32, 64)
+		POLYVECTOR 1024, 32, 0, 0, RGB(0, 32, 64)
+		POLYVECTOR 1024, 0, 0, 0, RGB(0, 64, 128)
+	ENDPOLY
+
+	DRAWSPRITE sprite[symbolID].id, 880, 0
 
 ENDFUNCTION
