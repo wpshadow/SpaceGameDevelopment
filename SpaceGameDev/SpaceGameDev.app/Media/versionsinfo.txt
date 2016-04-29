@@ -1,9 +1,0 @@
-Spacegame
-
-v0.0.1-27/04/2016
-======
-- Kickoff
-- Window - Development
-- GUI - Development
-- Basic Wall/Ground Structure
-- first version of versionsinfo.txt

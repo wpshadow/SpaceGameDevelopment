@@ -103,9 +103,11 @@ TYPE windows_TYPE
 ENDTYPE
 
 TYPE version_TYPE
-	text$[999]
-	lines
-	offsetY
+	text$
+ENDTYPE
+
+TYPE helper_TYPE
+	versionInfoOffsetY
 ENDTYPE
 
 TYPE color_TYPE
@@ -114,7 +116,7 @@ ENDTYPE
 
 
 GLOBAL mouse AS system_mouse_TYPE, mapInfos AS mapInfos_TYPE, options AS options_TYPE, ground[] AS ground_TYPE, wall[] AS wall_TYPE, gui[] AS gui_TYPE, mapEditor AS mapEditor_TYPE
-GLOBAL font AS font_TYPE, sprite[] AS sprite_TYPE, anim[] AS anim_TYPE, windows AS windows_TYPE, version AS version_TYPE, color AS color_TYPE
+GLOBAL font AS font_TYPE, sprite[] AS sprite_TYPE, anim[] AS anim_TYPE, windows AS windows_TYPE, version[] AS version_TYPE, color AS color_TYPE, helper AS helper_TYPE
 
 
 
@@ -174,7 +176,11 @@ FUNCTION init:
 ENDFUNCTION
 
 FUNCTION loader:
-LOCAL ok, enumWert, tmp$, split$[], typ, openID, s AS sprite_TYPE, v AS version_TYPE, line
+LOCAL ok, enumWert, tmp$, split$[], typ, openID, s AS sprite_TYPE, v AS version_TYPE, tmp_new$, line
+LOCAL tmp, tmp2, tmp3, blocks$, rows
+
+	PRINT "Loading", 0, 0
+	SHOWSCREEN
 
 	ok = DOESFILEEXIST("media/file.lst")
 
@@ -226,24 +232,78 @@ LOCAL ok, enumWert, tmp$, split$[], typ, openID, s AS sprite_TYPE, v AS version_
 	checkFont(0)
 	SETFONT 0
 
-	ok = DOESFILEEXIST("media/versionsinfo.txt")
+	loadVersionInfo()
 
-	IF ok = TRUE
-		OPENFILE(0, "media/versionsinfo.txt", 1)
-			WHILE ENDOFFILE(0) = FALSE
-				READLINE 0, version.text$[line]
-				INC line, 1
-			WEND
-		CLOSEFILE 0
+//	IF ok = TRUE
+//		OPENFILE(0, "media/versionsinfo.txt", 1)
+//			WHILE ENDOFFILE(0) = FALSE
+//				READLINE 0, tmp$
+//
+//
+//
+//				tmp_new$ = REPLACE$(tmp$, "Ã¤", "ä")
+//				tmp_new$ = REPLACE$(tmp$, "Ã" + CHR$(182), "ö")
+//				tmp_new$ = REPLACE$(tmp$, "Ã¼", "ü")
+//				//IF INSTR(tmp$, "¶", 0) > 0 THEN END
+//
+//
+//				version.text$[line] = tmp_new$
+//
+//				DEBUG tmp$ + "\n"
+//				INC line, 1
+//			WEND
+//		CLOSEFILE 0
+//
+//		//Ã¼
+//
+//		version.lines = line
+//	ELSE
+//		version.text$[0] = "NO DATA FOUND"
+//		version.lines = 1
+//	ENDIF
 
-		version.lines = line
-	ELSE
-		version.text$[0] = "NO DATA FOUND"
-		version.lines = 1
-	ENDIF
-
+	//DEBUG ASC("¶") + "\n"
 
 ENDFUNCTION
+
+FUNCTION loadVersionInfo:
+
+	addVersion("Spacegame")
+	addVersion(" ")
+	addVersion("v0.0.1-29/04/2016")
+	addVersion("======")
+	addVersion("- vollständiger Versionsinfo - Umbau")
+	addVersion("- externes Versionsinfo - File ist optional")
+	addVersion("- Versionsinfo - Anzeige angepasst")
+	addVersion("- Anpassung der GUI - Elemente")
+	addVersion("- Bugfix UTF-8 Problem")
+	addVersion(" ")
+	addVersion("v0.0.1-28/04/2016")
+	addVersion("======")
+	addVersion("- Anpassung des Window Versionsinfo")
+	addVersion("- Buttons in Versionsinfo angepasst")
+	addVersion("- Menüsymbol IN Versionsinfo hinterlegt und eingepflegt")
+	addVersion("- Menüsymbol IN Map - Editor hinterlegt und eingepflegt")
+	addVersion("- Menüsymbol IN Optionen hinterlegt und eingepflegt")
+	addVersion(" ")
+	addVersion("v0.0.1-27/04/2016")
+	addVersion("======")
+	addVersion("- Kickoff")
+	addVersion("- Window - Development")
+	addVersion("- GUI - Development")
+	addVersion("- Basic Wall/Ground Structure")
+	addVersion("- first version of versionsinfo.txt")
+
+ENDFUNCTION
+
+FUNCTION addVersion: text$
+LOCAL v AS version_TYPE
+
+	v.text$ = text$
+	
+	DIMPUSH version[], v
+
+ENDFUNCTION 
 
 FUNCTION checkFont: id
 
@@ -570,29 +630,39 @@ FUNCTION processFeedback: guiFeedback
 		IF guiFeedback = 3
 			changeWindow(2)
 		ENDIF
-	
+
 		IF guiFeedback = 4
 			changeWindow(1)
+		ENDIF
+
+		IF guiFeedback = 6
+			changeWindow(3)
 		ENDIF
 
 
 		IF guiFeedback = 5 THEN END
 	CASE 1
-		IF guiFeedback = 1 THEN version.offsetY = 0
-		IF guiFeedback = 2 THEN INC version.offsetY, 1
-		IF guiFeedback = 3 THEN DEC version.offsetY, 1
-		IF guiFeedback = 4 THEN DEC version.offsetY, 10
+		IF guiFeedback = 1 THEN helper.versionInfoOffsetY = 0
+		IF guiFeedback = 2 THEN INC helper.versionInfoOffsetY, 1
+		IF guiFeedback = 3 THEN DEC helper.versionInfoOffsetY, 1
+		IF guiFeedback = 4 THEN DEC helper.versionInfoOffsetY, 10
 
 		IF guiFeedback = 5
 			changeWindow(0)
 		ENDIF
-		
+
 	CASE 2
-	
+
 		IF guiFeedback = 5
 			changeWindow(0)
 		ENDIF
-	
+
+	CASE 3
+
+		IF guiFeedback = 5
+			changeWindow(0)
+		ENDIF
+
 	ENDSELECT
 
 
@@ -668,19 +738,21 @@ LOCAL mouseLeft, mouseRight, mouseLeftPercent
 			gui_addButton("Neue Kampagne", 1, 778, 10, 236, 40)
 			gui_addButton("Neues Spiel", 2, 778, 80, 236, 40)
 			gui_addButton("Optionen", 3, 778, 150, 236, 40)
+			gui_addButton("Map - Editor", 6, 778, 220, 236, 40)
+
 			gui_addButton("Versionsinfo", 4, 778, 648, 236, 40)
 			gui_addButton("Beenden", 5, 778, 718, 236, 40)
 			windows.Generated = TRUE
 		ENDIF
-		
+
 		drawMenu()
-	
+
 		mouseLeft = 64 * (1 - (mouse.x / 768))
 		IF mouseLeft < 0 THEN mouseLeft = 0
 		mouseRight = 64 * (mouse.x / 768)
 		IF mouseRight > 64 THEN mouseRight = 64
 
-		
+
 
 		STARTPOLY
 			POLYVECTOR 0, 0, 0, 0, RGB(64 + mouseLeft, 64 + mouseLeft, 64 + mouseLeft)
@@ -693,27 +765,43 @@ LOCAL mouseLeft, mouseRight, mouseLeftPercent
 	// VERSIONSINFO
 	CASE 1
 		IF windows.Generated = FALSE
-//			gui_addButton("Anfang", 1, 778, 10, 236, 40)
-//			gui_addButton("Hinauf", 2, 778, 80, 236, 40)
-//			gui_addButton("Hinunter", 3, 778, 150, 236, 40)
-//			gui_addButton("+10 Hinunter", 4, 778, 220, 236, 40)
+			gui_addButton("Anfang", 1, 778, 50, 236, 40)
+			gui_addButton("Hinauf", 2, 778, 120, 236, 40)
+			gui_addButton("Hinunter", 3, 778, 190, 236, 40)
+			gui_addButton("+10 Hinunter", 4, 778, 260, 236, 40)
 			gui_addButton("Zurück", 5, 778, 718, 236, 40)
 
 			windows.Generated = TRUE
 		ENDIF
 
 		drawWindowMenuWithSymbol(7)
+
+		tmpY = 0
 		
-
-
-
-		FOR tmp = 0 TO version.lines - 1
-			IF (tmp * 10) + (version.offsetY * 10) < 760 AND (tmp * 10) + (version.offsetY * 10) >= 0
-				PRINT version.text$[tmp], 0, 0 + (tmp * 10) + (version.offsetY * 10)
-			ENDIF
+		FOREACH v IN version[]
+		//FOR tmp = 0 TO version.lines - 1
+			//IF (tmpY * 10) + (helper.versionInfoOffsetY * 10) < 760 AND (tmpY * 10) + (helper.versionInfoOffsetY * 10) >= 0
+				PRINT v.text$, 0, 0 + (tmpY * 12) + (helper.versionInfoOffsetY * 12)
+			//ENDIF
+			INC tmpY, 1
 		NEXT
+		
 	// OPTIONS
 	CASE 2
+		IF windows.Generated = FALSE
+			gui_addButton("Anfang", 1, 778, 50, 236, 40)
+			gui_addButton("Hinauf", 2, 778, 130, 236, 40)
+			gui_addButton("Hinunter", 3, 778, 200, 236, 40)
+			gui_addButton("+10 Hinunter", 4, 778, 270, 236, 40)
+			gui_addButton("Zurück", 5, 778, 718, 236, 40)
+
+			windows.Generated = TRUE
+		ENDIF
+
+		drawWindowMenuWithSymbol(6)
+
+	CASE 3
+
 		IF windows.Generated = FALSE
 			//gui_addButton("Anfang", 1, 778, 10, 236, 40)
 			//gui_addButton("Hinauf", 2, 778, 80, 236, 40)
@@ -723,8 +811,11 @@ LOCAL mouseLeft, mouseRight, mouseLeftPercent
 
 			windows.Generated = TRUE
 		ENDIF
-		
-		drawWindowMenuWithSymbol(6)
+
+
+
+
+		drawWindowMenuWithSymbol(8)
 
 	ENDSELECT
 
@@ -734,7 +825,7 @@ ENDFUNCTION
 FUNCTION drawWindowMenuWithSymbol: symbolID
 
 	drawMenu()
-		
+
 	STARTPOLY
 		POLYVECTOR 768, 0, 0, 0, RGB(0, 64, 128)
 		POLYVECTOR 768, 32, 0, 0, RGB(0, 32, 64)
